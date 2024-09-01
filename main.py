@@ -152,7 +152,7 @@ def main():
             if scraped_content:
                 st.success("Scraping completed successfully!")
                 st.subheader("Scraped Content Preview")
-                st.text(scraped_content[:500] + "...")  # Show first 500 characters
+                st.text(scraped_content[:500] + ...)  # Show first 500 characters
 
                 st.subheader("Parsing Content")
                 result = parse_with_progress(scraped_content, parse_description, progress_callback)
