@@ -58,7 +58,7 @@ def get_image_as_base64(file):
         return base64.b64encode(f.read()).decode()
 
 # Set background image
-background_image = get_image_as_base64(r"C:\Users\Quadf\Downloads\gradient_blue.jpg")
+background_image = get_image_as_base64(r"C:\Users\Quadf\PycharmProjects\A.I-Scraper\gradient_blue.jpg")
 st.markdown(
     f"""
     <style>
