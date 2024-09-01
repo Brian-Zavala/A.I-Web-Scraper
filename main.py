@@ -132,7 +132,6 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-# Main app
 def main():
     def main():
         st.title("AI-Powered Web Scraper & Analyzer")
