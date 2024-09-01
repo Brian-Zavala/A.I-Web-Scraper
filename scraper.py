@@ -1,12 +1,7 @@
 import logging
-from llm_parser import parse_with_progress
 from selenium.webdriver import Remote, ChromeOptions
 from selenium.webdriver.chromium.remote_connection import ChromiumRemoteConnection
 import requests
-from selenium.common.exceptions import WebDriverException, TimeoutException
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
 import os
 from dotenv import load_dotenv
