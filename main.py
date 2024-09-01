@@ -11,7 +11,8 @@ import matplotlib.pyplot as plt
 import time
 import base64
 import logging
-st.set_page_config(layout="wide", page_title="AI Web Scraper & Analyzer", page_icon="🌐", initial_sidebar_state="collapsed")
+
+st.set_page_config(layout="wide", page_title="AI Web Scraper & Analyzer", page_icon="🌐", initial_sidebar_state="expanded")
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
