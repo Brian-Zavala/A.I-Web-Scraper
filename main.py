@@ -5,7 +5,7 @@ from scraper import scrape_website, extract_url, clean_url, batch_max_url
 from llm_parser import ollama_parser
 import nltk
 from nltk.corpus import stopwords
-from nltk.tokenize import PunktTokenizer
+from nltk.tokenize import word_tokenize
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 import time
@@ -77,7 +77,7 @@ st.markdown(
 def generate_wordcloud(text):
     try:
         stop_words = set(stopwords.words('english'))
-        word_tokens = PunktTokenizer(text)
+        word_tokens = word_tokenize(text)
         filtered_text = [word.lower() for word in word_tokens if word.isalnum() and word.lower() not in stop_words]
         wordcloud = WordCloud(width=800, height=400, background_color='white').generate(' '.join(filtered_text))
         return wordcloud
