@@ -134,7 +134,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 with st.sidebar:
-    st_lottie(lottie_sidebar, speed=1)
+    st_lottie(lottie_sidebar, speed=1, width=150)
 # Main app
 def main():
     # Sidebar for navigation
