@@ -15,14 +15,8 @@ import logging
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
-
-# Check for GROQ_API_KEY
-if not os.getenv("GROQ_API_KEY"):
-    st.error("GROQ_API_KEY is not set. Please set it as an environment variable.")
-    st.stop()
-
 st.set_page_config(layout="wide", page_title="AI Web Scraper & Analyzer", page_icon="🌐", initial_sidebar_state="expanded")
+
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
