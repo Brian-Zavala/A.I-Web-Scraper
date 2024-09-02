@@ -1,7 +1,7 @@
 import streamlit as st
 from streamlit_lottie import st_lottie
 import requests
-from scraper import scrape_website, extract_url, clean_url, batch_max_url, scrape_with_progress
+from scraper import scrape_with_progress
 from llm_parser import groq_parser
 import nltk
 import ssl
@@ -9,13 +9,11 @@ from nltk.corpus import stopwords
 from nltk.tokenize import PunktSentenceTokenizer, word_tokenize
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
-import time
 import base64
 import logging
-import os
-from dotenv import load_dotenv
 
-st.set_page_config(layout="wide", page_title="AI Web Scraper & Analyzer", page_icon="🌐", initial_sidebar_state="expanded")
+
+st.set_page_config(layout="wide", page_title="AI Web Scraper & Analyzer", page_icon="🌐", initial_sidebar_state="auto")
 
 
 # Set up logging
@@ -26,6 +24,7 @@ logger = logging.getLogger(__name__)
 def download_nltk_data():
     try:
         nltk.download('punkt', quiet=True, raise_on_error=True)
+        nltk.download('punkt_tab', quiet=True, raise_on_error=True)
         nltk.download('stopwords', quiet=True, raise_on_error=True)
     except ssl.SSLError:
         st.error("SSL Error occurred. NLTK data couldn't be downloaded securely.")
@@ -63,9 +62,10 @@ def load_lottieurl(url: str):
         return None
 
 # Load Lottie animations
-lottie_scraping = load_lottieurl("https://assets4.lottiefiles.com/packages/lf20_4tvpr9vr.json")
-lottie_analyzing = load_lottieurl("https://assets2.lottiefiles.com/packages/lf20_byynjwij.json")
-lottie_robot = load_lottieurl("https://assets9.lottiefiles.com/packages/lf20_zwwwgco2.json")
+lottie_scraping = load_lottieurl("https://lottie.host/dcf841a8-f778-42d3-bc94-fe832b850e7f/HB1oipPUP2.json")
+lottie_analyzing = load_lottieurl("https://lottie.host/e7b1797e-f02a-44be-b28f-c3e26c69fbd3/4PF5hVXPST.json")
+lottie_robot = load_lottieurl("https://lottie.host/2945d2be-6612-4bc3-8ffc-4bbaa755045b/y0olOO2xO7.json")
+lottie_sidebar = load_lottieurl("https://lottie.host/3af8aa11-aec4-4661-98a6-6396ff474e0f/YIpGN6tsQ9.json")
 
 # Function to get image as base64
 def get_image_as_base64(file):
@@ -132,11 +132,14 @@ st.markdown("""
 # Main app
 def main():
     # Sidebar for navigation
+    with st.sidebar:
+        st_lottie(lottie_sidebar, speed=1, width=150)
     st.sidebar.title("Navigation")
     page = st.sidebar.radio("Go to", ["Home", "Scraper & Analyzer", "About"])
 
+
     if page == "Home":
-        st.title("Welcome to AI-Powered Web Scraper & Analyzer")
+        st.markdown("<h1 class='pulse'>Groq A.I Web Scraper & Visualizer</h1>", unsafe_allow_html=True)
         st.write("This app combines the power of web scraping, Groq AI, and interactive visualizations.")
         if lottie_robot:
             st_lottie(lottie_robot, speed=1, height=300, key="robot")
@@ -166,6 +169,7 @@ def main():
                 progress_bar = st.progress(0)
                 status_text = st.empty()
 
+
                 def update_progress(progress, status):
                     progress_bar.progress(progress)
                     status_text.text(status)
@@ -188,6 +192,7 @@ def main():
                     logger.error(f"Error during scraping: {str(e)}")
                     st.error(f"🚫 Oops! An error occurred during scraping: {str(e)}")
                     st.session_state.scraping_complete = False
+                    st.rerun()
 
         # Analysis section
         if st.session_state.get('scraping_complete', False):
@@ -242,7 +247,7 @@ def main():
                             st.error(f"An error occurred during analysis: {str(e)}")
 
     elif page == "About":
-        st.title("About This App")
+        st.markdown("<h1 class='pulse'>About</h1>", unsafe_allow_html=True)
         st.write("""
         This advanced web scraper and analyzer combines cutting-edge technologies to provide insights from web content:
 
@@ -258,13 +263,16 @@ def main():
         st.subheader("Our Team")
         col1, col2, col3 = st.columns(3)
         with col1:
-            st.image("https://api.dicebear.com/6.x/avataaars/svg?seed=Felix", width=150)
+            st.write("")
+            st.image("https://files.vecteezy.com/system/resource/files/15328491/vecteezy_artificial-consciousness-vector-icon-design_15328491_193.svg?response-content-disposition=attachment%3Bfilename%3Dvecteezy_artificial-consciousness-vector-icon-design_15328491.svg&Expires=1725258081&Signature=PR96c9BgsgV9ZQLjaAn4S95V-kY9UmWlf5dfmKP9VkFajQOvYBwMNCKLfYjpJwH7seFiklAH20hZw6U-UrjrGoxMiAzSsk7x2TELwlHy3HK2PjKWfdG0ukOkJUaL-rrtzcCJ7o4QBmANjGZCkXhIPD5QvMe46lu~Qgyz6yBhcvQ15Jn15og9SR51tPNY3~ZIKlWAri-TIPT-RErMk4HHY7LpMpbiFj0H9HbQC0CCF8iTiQPpZ77e3C-"
+                     "2R8mpSf2Jsz34E13HybcReU1WWYfGxQO1Wp5I5MiX0Z0eJQl-"
+                     "3Ysms8TcxIV7RUcey6f7gJIJgKA8L-z7qv2kZ2YTVXOVhQ__&Key-Pair-Id=K3714PYOSHV3HB", width=146)
             st.write("Groq - AI Expert")
         with col2:
-            st.image("https://api.dicebear.com/6.x/avataaars/svg?seed=Sophia", width=150)
+            st.image("https://api.dicebear.com/9.x/personas/svg?seed=Maggie", width=150)
             st.write("Claudia - Web Developer")
         with col3:
-            st.image("https://api.dicebear.com/6.x/avataaars/svg?seed=Oliver", width=150)
+            st.image("https://api.dicebear.com/9.x/personas/svg?seed=Bella", width=150)
             st.write("Brian - Data Scientist")
 
     # Footer
@@ -283,7 +291,7 @@ def main():
     }
     </style>
     <div class="footer">
-        🚀 Powered by AI magic and human curiosity | © 2024 Web Explorer
+        🚀 Powered by Groq AI | © 2024 Web Explorer
     </div>
     """, unsafe_allow_html=True)
 

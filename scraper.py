@@ -15,20 +15,14 @@ SBR_WEBDRIVER = os.getenv('CLOUD_DRIVER')
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 def scrape_website(site):
     logger.info(f"Scraping website: {site}")
 
-    # First, try a simple request
-    try:
-        response = requests.get(site, timeout=30)
-        if response.status_code == 200:
-            logger.info("Successfully fetched the website using requests")
-            return response.text
-    except Exception as e:
-        logger.warning(f"Failed to fetch website using requests: {str(e)}")
 
     # If simple request fails, try with Selenium
     chrome_options = ChromeOptions()
+
     try:
         sbr_connection = ChromiumRemoteConnection(SBR_WEBDRIVER, 'goog', 'chrome')
         with Remote(sbr_connection, options=chrome_options) as driver:
@@ -45,6 +39,7 @@ def scrape_website(site):
         logger.error(f"Error during Selenium scraping: {str(e)}")
 
     return None
+
 
 def scrape_with_progress(url: str, progress_callback: Callable[[int, str], None]) -> Tuple[str, List[str]]:
     progress_callback(0, "Initializing scraper...")
@@ -68,11 +63,13 @@ def scrape_with_progress(url: str, progress_callback: Callable[[int, str], None]
 
     return cleaned_content, data_bits
 
+
 def extract_url(page):
     if not page:
         return ""
     soup = BeautifulSoup(page, 'html.parser')
     return str(soup.body) if soup.body else ""
+
 
 def clean_url(body_text):
     if not body_text:
@@ -81,6 +78,7 @@ def clean_url(body_text):
     for element in soup(["style", "script"]):
         element.decompose()
     return '\n'.join(line.strip() for line in soup.get_text(separator='\n').splitlines() if line.strip())
+
 
 def batch_max_url(content, max_length=512):
     return [content[i:i + max_length] for i in range(0, len(content), max_length)]
