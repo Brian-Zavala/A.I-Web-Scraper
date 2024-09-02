@@ -29,11 +29,6 @@ def scrape_website(site):
 
     # If simple request fails, try with Selenium
     chrome_options = ChromeOptions()
-    chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--disable-gpu")
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-
     try:
         sbr_connection = ChromiumRemoteConnection(SBR_WEBDRIVER, 'goog', 'chrome')
         with Remote(sbr_connection, options=chrome_options) as driver:
@@ -99,5 +94,5 @@ def clean_url(body_text):
     return '\n'.join(line.strip() for line in soup.get_text(separator='\n').splitlines() if line.strip())
 
 
-def batch_max_url(content, max_length=6000):
+def batch_max_url(content, max_length=512):
     return [content[i:i + max_length] for i in range(0, len(content), max_length)]

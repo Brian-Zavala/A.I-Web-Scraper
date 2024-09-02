@@ -2,7 +2,7 @@ import streamlit as st
 from streamlit_lottie import st_lottie
 import requests
 from scraper import scrape_website, extract_url, clean_url, batch_max_url
-from llm_parser import ollama_parser
+from llm_parser import groq_parser
 import nltk
 import ssl
 from nltk.corpus import stopwords
@@ -12,6 +12,12 @@ import matplotlib.pyplot as plt
 import time
 import base64
 import logging
+import os
+
+# Check for GROQ_API_KEY
+if not os.environ.get("GROQ_API_KEY"):
+    st.error("GROQ_API_KEY is not set. Please set it as an environment variable.")
+    st.stop()
 
 st.set_page_config(layout="wide", page_title="AI Web Scraper & Analyzer", page_icon="🌐", initial_sidebar_state="expanded")
 
@@ -19,13 +25,10 @@ st.set_page_config(layout="wide", page_title="AI Web Scraper & Analyzer", page_i
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
 @st.cache_resource
 def download_nltk_data():
     try:
-        # Attempt to download NLTK data
         nltk.download('punkt', quiet=True, raise_on_error=True)
-        nltk.download('punkt_tab', quiet=True, raise_on_error=True)
         nltk.download('stopwords', quiet=True, raise_on_error=True)
     except ssl.SSLError:
         st.error("SSL Error occurred. NLTK data couldn't be downloaded securely.")
@@ -36,8 +39,6 @@ def download_nltk_data():
 
 # Call this function at the start of your app
 download_nltk_data()
-
-# Set page config
 
 # Initialize session state variables
 if 'cleaned_content' not in st.session_state:
@@ -53,60 +54,59 @@ if 'scraping_complete' not in st.session_state:
 if 'parser_input' not in st.session_state:
     st.session_state.parser_input = ""
 
-
 # Function to load Lottie animation
 def load_lottieurl(url: str):
-    r = requests.get(url)
-    if r.status_code != 200:
+    try:
+        r = requests.get(url)
+        if r.status_code != 200:
+            return None
+        return r.json()
+    except Exception as e:
+        logger.error(f"Error loading Lottie animation: {str(e)}")
         return None
-    return r.json()
 
+# Load Lottie animations
+lottie_scraping = load_lottieurl("https://assets4.lottiefiles.com/packages/lf20_4tvpr9vr.json")
+lottie_analyzing = load_lottieurl("https://assets2.lottiefiles.com/packages/lf20_byynjwij.json")
+lottie_robot = load_lottieurl("https://assets9.lottiefiles.com/packages/lf20_zwwwgco2.json")
 
 # Function to get image as base64
 def get_image_as_base64(file):
-    with open(file, "rb") as f:
-        return base64.b64encode(f.read()).decode()
+    try:
+        with open(file, "rb") as f:
+            return base64.b64encode(f.read()).decode()
+    except Exception as e:
+        logger.error(f"Error loading background image: {str(e)}")
+        return None
 
 # Set background image
 background_image = get_image_as_base64("gradient_blue.jpg")
-st.markdown(
-    f"""
-    <style>
-    .stApp {{
-        background-image: url("data:image/jpg;base64,{background_image}");
-        background-size: cover;
-    }}
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
+if background_image:
+    st.markdown(
+        f"""
+        <style>
+        .stApp {{
+            background-image: url("data:image/jpg;base64,{background_image}");
+            background-size: cover;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
 
 # Function to generate word cloud
 def generate_wordcloud(text):
     try:
         stop_words = set(stopwords.words('english'))
-
-        # Use PunktSentenceTokenizer for sentence tokenization
         sent_tokenizer = PunktSentenceTokenizer()
         sentences = sent_tokenizer.tokenize(text)
-
-        # Tokenize words from sentences
         word_tokens = [word for sentence in sentences for word in word_tokenize(sentence)]
-
         filtered_text = [word.lower() for word in word_tokens if word.isalnum() and word.lower() not in stop_words]
         wordcloud = WordCloud(width=800, height=400, background_color='white').generate(' '.join(filtered_text))
-        return wordcloud
-    except LookupError:
-        st.warning("NLTK data is not available. Word cloud generation might be affected.")
-        # Fallback to a simple split method if NLTK data is not available
-        words = text.split()
-        wordcloud = WordCloud(width=800, height=400, background_color='white').generate(' '.join(words))
         return wordcloud
     except Exception as e:
         st.error(f"An error occurred while generating the word cloud: {str(e)}")
         return None
-
 
 # Function to scrape website with progress updates
 def scrape_with_progress(url, progress_callback):
@@ -127,8 +127,7 @@ def scrape_with_progress(url, progress_callback):
 
     progress_callback(100, "Scraping complete!")
 
-    return cleaned_content, data_bits
-
+    return cleaned_content,
 
 # Custom CSS for animations and styling
 st.markdown("""
@@ -153,28 +152,26 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-
 # Main app
 def main():
     # Sidebar for navigation
     st.sidebar.title("Navigation")
     page = st.sidebar.radio("Go to", ["Home", "Scraper & Analyzer", "About"])
 
-    # Load Lottie animation
-    lottie_url = "https://assets5.lottiefiles.com/packages/lf20_fcfjwiyb.json"
-    lottie_json = load_lottieurl(lottie_url)
-
     if page == "Home":
         st.title("Welcome to AI-Powered Web Scraper & Analyzer")
-        st.write("This app combines the power of web scraping, Llama 3.1, and interactive visualizations.")
-        st_lottie(lottie_json, speed=1, height=300, key="lottie")
+        st.write("This app combines the power of web scraping, Groq AI, and interactive visualizations.")
+        if lottie_robot:
+            st_lottie(lottie_robot, speed=1, height=300, key="robot")
+        else:
+            st.image("https://via.placeholder.com/300x200?text=AI+Web+Scraper", use_column_width=True)
 
         st.markdown("""
         ### 🚀 Explore the Web with AI
 
         Our advanced tool allows you to:
         - 🕷️ Scrape websites with ease
-        - 🧠 Analyze content using cutting-edge AI
+        - 🧠 Analyze content using cutting-edge AI (powered by Groq)
         - 📊 Visualize insights with interactive charts
 
         Get started by navigating to the 'Scraper & Analyzer' page!
@@ -197,8 +194,11 @@ def main():
                     status_text.text(status)
 
                 try:
-                    st.session_state.cleaned_content, st.session_state.data_bits = scrape_with_progress(
-                        st.session_state.url, update_progress)
+                    with st.spinner("Scraping in progress..."):
+                        if lottie_scraping:
+                            st_lottie(lottie_scraping, speed=1, height=200, key="scraping")
+                        st.session_state.cleaned_content, st.session_state.data_bits = scrape_with_progress(
+                            st.session_state.url, update_progress)
                     st.success("🎉 Scraping completed successfully!")
                     st.session_state.scraping_complete = True
 
@@ -214,15 +214,20 @@ def main():
 
         # Analysis section
         if st.session_state.get('scraping_complete', False):
-            st.session_state.parser_input = st.text_area("🧠 What should I look for in this data?",
-                                                         value=st.session_state.parser_input,
-                                                         placeholder="e.g., Extract all product names and prices")
+            st.subheader("🧠 AI-Powered Analysis")
+            st.session_state.parser_input = st.text_area(
+                "What information would you like to extract from the scraped content?",
+                value=st.session_state.parser_input,
+                placeholder="e.g., Extract all product names and prices, or summarize the main topics"
+            )
 
             if st.button('🔮 Analyze', key='parse_button'):
                 if st.session_state.parser_input:
                     with st.expander("🔬 Analysis Dashboard", expanded=True):
                         st.markdown("<h3 class='pulse'>🧙‍♂️ The AI is weaving its magic...</h3>",
                                     unsafe_allow_html=True)
+                        if lottie_analyzing:
+                            st_lottie(lottie_analyzing, speed=1, height=200, key="analyzing")
                         progress_bar = st.progress(0)
                         status_text = st.empty()
 
@@ -231,26 +236,23 @@ def main():
                             status_text.text(status)
 
                         try:
-                            logger.info(f"Number of data bits: {len(st.session_state.data_bits)}")
-                            logger.info(f"Parser input: {st.session_state.parser_input}")
-
-                            st.session_state.parsed_result = ollama_parser(st.session_state.data_bits,
-                                                                           st.session_state.parser_input,
-                                                                           update_progress)
+                            st.session_state.parsed_result = groq_parser(
+                                st.session_state.data_bits,
+                                st.session_state.parser_input,
+                                update_progress
+                            )
 
                             if st.session_state.parsed_result:
                                 st.success("✨ Analysis complete! Behold the insights!")
+                                st.subheader("🎨 Parsed Insights")
+                                st.write(st.session_state.parsed_result)
                             else:
                                 st.warning(
                                     "The analysis did not produce any results. The parsed content might be empty.")
 
-                            # Display parsed result
-                            st.subheader("🎨 Parsed Insights")
-                            st.write(st.session_state.parsed_result)
-
                             # Word Cloud
                             st.subheader("☁️ Word Cloud")
-                            wordcloud = generate_wordcloud(st.session_state.parsed_result)
+                            wordcloud = generate_wordcloud(st.session_state.cleaned_content)
                             if wordcloud:
                                 plt.figure(figsize=(10, 5))
                                 plt.imshow(wordcloud, interpolation='bilinear')
@@ -260,18 +262,17 @@ def main():
                                 st.warning(
                                     "🌪️ Oops! The word cloud generator hit a snag. But don't worry, the show must go on!")
                         except Exception as e:
-                                print(f"Not parsed correctly")
+                            st.error(f"An error occurred during analysis: {str(e)}")
+
     elif page == "About":
         st.title("About This App")
         st.write("""
         This advanced web scraper and analyzer combines cutting-edge technologies to provide insights from web content:
 
         - **Web Scraping**: Extracts content from any website you specify.
-        - **Llama 3.1 Integration**: Utilizes the power of Llama 3.1 for natural language processing tasks.
+        - **Groq AI Integration**: Utilizes the power of Groq AI for natural language processing tasks.
         - **Interactive Visualizations**: Presents data through word clouds and interactive charts.
-        - **Sentiment Analysis**: Determines the overall sentiment of the scraped content.
-        - **Named Entity Recognition**: Identifies important entities in the text.
-        - **Topic Modeling**: Discovers the main themes in the content.
+        - **Custom Analysis**: Allows you to specify exactly what information you want to extract or analyze.
 
         Enjoy exploring the web with AI-powered analysis!
         """)
@@ -281,7 +282,7 @@ def main():
         col1, col2, col3 = st.columns(3)
         with col1:
             st.image("https://api.dicebear.com/6.x/avataaars/svg?seed=Felix", width=150)
-            st.write("Llama - AI Expert")
+            st.write("Groq - AI Expert")
         with col2:
             st.image("https://api.dicebear.com/6.x/avataaars/svg?seed=Sophia", width=150)
             st.write("Claudia - Web Developer")
@@ -308,7 +309,6 @@ def main():
         🚀 Powered by AI magic and human curiosity | © 2024 Web Explorer
     </div>
     """, unsafe_allow_html=True)
-
 
 if __name__ == "__main__":
     main()
