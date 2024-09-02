@@ -5,7 +5,6 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import TimeoutException, WebDriverException
-import requests
 from bs4 import BeautifulSoup
 import os
 from dotenv import load_dotenv
@@ -60,9 +59,7 @@ def scrape_website(site: str) -> str:
 
             logger.info("Successfully scraped the website using Selenium")
 
-            # Remove performance logging attempt
-            # logs = driver.get_log('performance')
-            # logger.debug(f"Performance logs: {logs}")
+
 
             return page_source
     except TimeoutException:
