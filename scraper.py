@@ -21,6 +21,10 @@ def scrape_website(site):
 
     # try with Selenium
     chrome_options = ChromeOptions()
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("--window-size=1920x1080")
     try:
         sbr_connection = ChromiumRemoteConnection(SBR_WEBDRIVER, 'goog', 'chrome')
         with Remote(sbr_connection, options=chrome_options) as driver:
