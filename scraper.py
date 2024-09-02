@@ -101,35 +101,3 @@ def clean_url(body_text):
 
 def batch_max_url(content, max_length=6000):
     return [content[i:i + max_length] for i in range(0, len(content), max_length)]
-
-
-def scrape_and_parse(url, parsed_data, progress_callback):
-    try:
-        progress_callback(0, "Initializing scraper...")
-        time.sleep(1)  # Simulate initialization time
-
-        progress_callback(10, "Connecting to website...")
-        DOM = scrape_website(url)
-        if not DOM:
-            raise Exception("Failed to retrieve page content")
-
-        progress_callback(40, "Extracting content...")
-        page_content = extract_url(DOM)
-        if not page_content:
-            raise Exception("Failed to extract content from DOM")
-
-        progress_callback(70, "Cleaning and processing data...")
-        clean_page = clean_url(page_content)
-        if not clean_page:
-            raise Exception("Failed to clean and process data")
-
-        progress_callback(80, "Parsing data...")
-        parsed_result = parse_with_progress(clean_page, parsed_data, progress_callback)
-
-        progress_callback(100, "Scraping and parsing complete!")
-
-        return parsed_result
-    except Exception as e:
-        logger.error("Error during scraping and parsing: %s", str(e))
-        progress_callback(100, f"Error: {str(e)}")
-        return None

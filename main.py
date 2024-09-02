@@ -4,8 +4,9 @@ import requests
 from scraper import scrape_website, extract_url, clean_url, batch_max_url
 from llm_parser import ollama_parser
 import nltk
+import ssl
 from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
+from nltk.tokenize import PunktSentenceTokenizer, word_tokenize
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 import time
@@ -19,13 +20,21 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-# Download necessary NLTK data
 @st.cache_resource
 def download_nltk_data():
-    nltk.download('punkt', quiet=True)
-    nltk.download('stopwords', quiet=True)
+    try:
+        # Attempt to download NLTK data
+        nltk.download('punkt', quiet=True, raise_on_error=True)
+        nltk.download('punkt_tab', quiet=True, raise_on_error=True)
+        nltk.download('stopwords', quiet=True, raise_on_error=True)
+    except ssl.SSLError:
+        st.error("SSL Error occurred. NLTK data couldn't be downloaded securely.")
+        st.info("You may need to download NLTK data manually or check your internet connection.")
+    except Exception as e:
+        st.error(f"An error occurred while downloading NLTK data: {str(e)}")
+        st.info("You may need to download NLTK data manually or check your internet connection.")
 
-
+# Call this function at the start of your app
 download_nltk_data()
 
 # Set page config
@@ -77,12 +86,25 @@ st.markdown(
 def generate_wordcloud(text):
     try:
         stop_words = set(stopwords.words('english'))
-        word_tokens = word_tokenize(text)
+
+        # Use PunktSentenceTokenizer for sentence tokenization
+        sent_tokenizer = PunktSentenceTokenizer()
+        sentences = sent_tokenizer.tokenize(text)
+
+        # Tokenize words from sentences
+        word_tokens = [word for sentence in sentences for word in word_tokenize(sentence)]
+
         filtered_text = [word.lower() for word in word_tokens if word.isalnum() and word.lower() not in stop_words]
         wordcloud = WordCloud(width=800, height=400, background_color='white').generate(' '.join(filtered_text))
         return wordcloud
+    except LookupError:
+        st.warning("NLTK data is not available. Word cloud generation might be affected.")
+        # Fallback to a simple split method if NLTK data is not available
+        words = text.split()
+        wordcloud = WordCloud(width=800, height=400, background_color='white').generate(' '.join(words))
+        return wordcloud
     except Exception as e:
-        logger.error(f"Error in word cloud generation: {str(e)}")
+        st.error(f"An error occurred while generating the word cloud: {str(e)}")
         return None
 
 
@@ -216,7 +238,11 @@ def main():
                                                                            st.session_state.parser_input,
                                                                            update_progress)
 
-                            st.success("✨ Analysis complete! Behold the insights!")
+                            if st.session_state.parsed_result:
+                                st.success("✨ Analysis complete! Behold the insights!")
+                            else:
+                                st.warning(
+                                    "The analysis did not produce any results. The parsed content might be empty.")
 
                             # Display parsed result
                             st.subheader("🎨 Parsed Insights")
@@ -233,40 +259,8 @@ def main():
                             else:
                                 st.warning(
                                     "🌪️ Oops! The word cloud generator hit a snag. But don't worry, the show must go on!")
-
-                            # Interactive Analysis Tools
-                            st.subheader("🛠️ Interactive Analysis Tools")
-                            tool = st.selectbox("Select an analysis tool",
-                                                ["Sentiment Analysis", "Named Entity Recognition", "Topic Modeling"])
-
-                            if tool == "Sentiment Analysis":
-                                if st.button("📊 Analyze Sentiment"):
-                                    with st.spinner("🎭 Detecting the mood of the text..."):
-                                        sentiment_prompt = f"Analyze the sentiment of the following text and categorize it as positive, negative, or neutral. Provide a brief explanation for your categorization: {st.session_state.parsed_result[:1000]}..."
-                                        sentiment_result = ollama_parser([sentiment_prompt], "Sentiment analysis")
-                                        st.write(sentiment_result)
-
-                            elif tool == "Named Entity Recognition":
-                                if st.button("🏷️ Recognize Entities"):
-                                    with st.spinner("🕵️ Identifying key players in the text..."):
-                                        ner_prompt = f"Perform named entity recognition on the following text. Identify and list all person names, organizations, locations, and dates: {st.session_state.parsed_result[:1000]}..."
-                                        ner_result = ollama_parser([ner_prompt], "Named Entity Recognition")
-                                        st.write(ner_result)
-
-                            elif tool == "Topic Modeling":
-                                num_topics = st.slider("Number of topics", 2, 10, 5)
-                                if st.button("🗂️ Generate Topics"):
-                                    with st.spinner("🧩 Uncovering hidden themes..."):
-                                        topic_prompt = f"Perform topic modeling on the following text. Identify {num_topics} main topics and list the top 5 keywords for each topic: {st.session_state.parsed_result}"
-                                        topics = ollama_parser([topic_prompt], "Topic Modeling")
-                                        st.write(topics)
-
                         except Exception as e:
-                            logger.error(f"Error during parsing: {str(e)}")
-                            st.error(f"🚫 The crystal ball clouded: {str(e)}")
-                else:
-                    st.warning("Please enter a request for analysis.")
-
+                                print(f"Not parsed correctly")
     elif page == "About":
         st.title("About This App")
         st.write("""
