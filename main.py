@@ -171,6 +171,7 @@ def main():
             if st.session_state.url:
                 progress_bar = st.progress(0)
                 status_text = st.empty()
+                st.info("Note: Some websites may block our scraper. If you encounter issues, try a different website or check back later.")
 
                 def update_progress(progress, status):
                     progress_bar.progress(progress)
@@ -180,17 +181,20 @@ def main():
                     with st.spinner("Scraping please wait..."):
                         st.session_state.cleaned_content, st.session_state.data_bits = scrape_with_progress(
                             st.session_state.url, update_progress)
-                    st.success("🎉 Scraping completed successfully!")
-                    st.session_state.scraping_complete = True
+                    if st.session_state.cleaned_content is None:
+                        st.warning("⚠️ The website denied access to our scraper. Unable to retrieve content.")
+                    else:
+                        st.success("🎉 Scraping completed successfully!")
+                        st.session_state.scraping_complete = True
 
                     # Display a sample of the cleaned content
-                    with st.expander("View Scraped Content Sample"):
-                        st.text_area("Cleaned Content Sample", st.session_state.cleaned_content[:1000] + "...",
+                    with st.expander("View Scraped Content"):
+                        st.text_area("Cleaned Content", st.session_state.cleaned_content[:2000] + "...",
                                      height=200)
 
                 except Exception as e:
                     logger.error(f"Error during scraping: {str(e)}")
-                    st.error(f"🚫 Oops! An error occurred during scraping: {str(e)}")
+                    st.error(f"🚫 This website is stubborn please try another URL: {str(e)}")
                     st.session_state.scraping_complete = False
 
         # Analysis section

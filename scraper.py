@@ -10,6 +10,7 @@ import os
 import time
 from typing import Callable, Tuple, List
 from retrying import retry
+import random
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -18,20 +19,32 @@ logger = logging.getLogger(__name__)
 # Get WebDriver URL from environment variable
 SBR_WEBDRIVER = os.getenv('CLOUD_DRIVER')
 
+user_agents = [
+    'Mozilla/5.0 (Windows NT 11.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Windows NT 11.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0',
+    'Mozilla/5.0 (Windows NT 11.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_3_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_3_0) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15',
+    'Mozilla/5.0 (X11; Linux x86_64; rv:121.0) Gecko/20100101 Firefox/121.0',
+    'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:121.0) Gecko/20100101 Firefox/121.0',
+    'Mozilla/5.0 (iPhone; CPU iPhone OS 17_2_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+    'Mozilla/5.0 (iPad; CPU OS 17_2_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+    'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.6099.230 Mobile Safari/537.36'
+]
+
+languages = ['en-US,en;q=0.9', 'en-GB,en;q=0.8', 'es-ES,es;q=0.9']
+
 
 @retry(stop_max_attempt_number=3, wait_fixed=2000)
 def scrape_website(site: str) -> str:
     logger.info(f"Scraping website: {site}")
-
     chrome_options = ChromeOptions()
+    chrome_options.add_argument(f"--user-agent={random.choice(user_agents)}")
+    chrome_options.add_argument(f"--lang={random.choice(languages)}")
     chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-gpu")
-    chrome_options.add_argument("--window-size=1920x1080")
     chrome_options.page_load_strategy = 'eager'
-
-    # Remove the performance logging capability as it's not supported in this environment
-    # chrome_options.set_capability('goog:loggingPrefs', {'performance': 'ALL'})
+    chrome_options.platform_name = 'any'
 
     try:
         logger.info(f"Connecting to remote WebDriver: {SBR_WEBDRIVER}")
