@@ -175,9 +175,7 @@ def main():
                     status_text.text(status)
 
                 try:
-                    with st.spinner("Scraping in progress..."):
-                        if lottie_scraping:
-                            st_lottie(lottie_scraping, speed=1, height=200, key="scraping")
+                    with st.spinner("Scraping please wait..."):
                         st.session_state.cleaned_content, st.session_state.data_bits = scrape_with_progress(
                             st.session_state.url, update_progress)
                     st.success("🎉 Scraping completed successfully!")
