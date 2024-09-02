@@ -9,6 +9,15 @@ if api_key is None:
     raise ValueError("GROQ_API_KEY environment variable is not set")
 
 
+def parse_response(response):
+    try:
+        # First, try to parse as JSON
+        return json.loads(response)
+    except json.JSONDecodeError:
+        # If it's not valid JSON, return the raw text
+        return {"raw_response": response}
+
+
 class GroqParser:
     def __init__(self):
         self.client = AsyncGroq(api_key=api_key)
@@ -30,18 +39,10 @@ class GroqParser:
             model="llama3-8b-8192",
         )
 
-        return self.parse_response(chat_completion.choices[0].message.content)
+        return parse_response(chat_completion.choices[0].message.content)
 
     def get_prompt(self, text, instruction):
         return f"Analyze the following text and {instruction}. Provide your response in a clear, structured format:\n\n{text}"
-
-    def parse_response(self, response):
-        try:
-            # First, try to parse as JSON
-            return json.loads(response)
-        except json.JSONDecodeError:
-            # If it's not valid JSON, return the raw text
-            return {"raw_response": response}
 
 
 async def async_groq_parser(data_bits, instruction, progress_callback=None):
