@@ -191,7 +191,6 @@ def main():
                     logger.error(f"Error during scraping: {str(e)}")
                     st.error(f"🚫 Oops! An error occurred during scraping: {str(e)}")
                     st.session_state.scraping_complete = False
-                    st.rerun()
 
         # Analysis section
         if st.session_state.get('scraping_complete', False):

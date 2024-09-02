@@ -74,25 +74,32 @@ def scrape_website(site: str) -> str:
 
 
 def scrape_with_progress(url: str, progress_callback: Callable[[int, str], None]) -> Tuple[str, List[str]]:
+    logger.info(f"Starting scrape_with_progress for URL: {url}")
     progress_callback(0, "Initializing scraper...")
     time.sleep(1)  # Simulate initialization time
 
     progress_callback(20, "Fetching webpage...")
     html_content = scrape_website(url)
+    logger.info(f"HTML content fetched, length: {len(html_content) if html_content else 'None'}")
     if html_content is None:
+        logger.error("Failed to fetch webpage content")
         progress_callback(100, "Scraping failed")
         raise Exception("Failed to fetch webpage content")
 
     progress_callback(40, "Extracting content...")
     extracted_content = extract_url(html_content)
+    logger.info(f"Extracted content length: {len(extracted_content)}")
 
     progress_callback(60, "Cleaning data...")
     cleaned_content = clean_url(extracted_content)
+    logger.info(f"Cleaned content length: {len(cleaned_content)}")
 
     progress_callback(80, "Preparing for analysis...")
     data_bits = batch_max_url(cleaned_content)
+    logger.info(f"Number of data bits: {len(data_bits)}")
 
     progress_callback(100, "Scraping complete!")
+    logger.info("Scraping process completed successfully")
 
     return cleaned_content, data_bits
 
