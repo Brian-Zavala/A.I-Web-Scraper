@@ -19,11 +19,12 @@ logger = logging.getLogger(__name__)
 def scrape_website(site):
     logger.info(f"Scraping website: {site}")
 
-     # try with Selenium
+    # try with Selenium
     chrome_options = ChromeOptions()
     try:
         sbr_connection = ChromiumRemoteConnection(SBR_WEBDRIVER, 'goog', 'chrome')
         with Remote(sbr_connection, options=chrome_options) as driver:
+            logger.info(f"Navigating to: {site}")
             driver.get(site)
             logger.info('Waiting for page to load...')
             time.sleep(10)  # Wait for 10 seconds
@@ -35,6 +36,7 @@ def scrape_website(site):
                 logger.error("Failed to get page source")
     except Exception as e:
         logger.error(f"Error during Selenium scraping: {str(e)}")
+        logger.error(f"URL being scraped: {site}")
 
     return None
 
@@ -78,5 +80,5 @@ def clean_url(body_text):
     return '\n'.join(line.strip() for line in soup.get_text(separator='\n').splitlines() if line.strip())
 
 
-def batch_max_url(content, max_length=512):
+def batch_max_url(content, max_length=6000):
     return [content[i:i + max_length] for i in range(0, len(content), max_length)]
