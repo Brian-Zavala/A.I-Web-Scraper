@@ -7,13 +7,9 @@ from selenium.webdriver.common.by import By
 from selenium.common.exceptions import TimeoutException, WebDriverException
 from bs4 import BeautifulSoup
 import os
-from dotenv import load_dotenv
 import time
 from typing import Callable, Tuple, List
 from retrying import retry
-
-# Load environment variables
-load_dotenv()
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
