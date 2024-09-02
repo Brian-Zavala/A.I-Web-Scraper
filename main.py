@@ -134,15 +134,12 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+with st.sidebar:
+    st_lottie(lottie_sidebar, speed=1, width=150)
 
 # Main app
 def main():
     # Sidebar for navigation
-    if st.sidebar:
-        st_lottie(lottie_sidebar, speed=1, width=150)
-    else:
-        st.image("https://via.placeholder.com/300x200?text=AI+Web+Scraper", use_column_width=True)
-
     st.sidebar.title("Navigation")
     page = st.sidebar.radio("Go to", ["Home", "Scraper & Analyzer", "About"])
 
