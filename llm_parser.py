@@ -1,4 +1,3 @@
-import os
 import asyncio
 import json
 from groq import AsyncGroq
@@ -12,7 +11,7 @@ if api_key is None:
 
 class GroqParser:
     def __init__(self):
-        self.client = AsyncGroq(api_key=os.environ.get(api_key))
+        self.client = AsyncGroq(api_key=api_key)
 
     async def analyze_text(self, text, instruction):
         prompt = self.get_prompt(text, instruction)
