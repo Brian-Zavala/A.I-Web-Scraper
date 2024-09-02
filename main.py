@@ -12,13 +12,12 @@ import matplotlib.pyplot as plt
 import base64
 import logging
 
-
 st.set_page_config(layout="wide", page_title="AI Web Scraper & Analyzer", page_icon="🌐", initial_sidebar_state="auto")
-
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
 
 @st.cache_resource
 def download_nltk_data():
@@ -32,6 +31,7 @@ def download_nltk_data():
     except Exception as e:
         st.error(f"An error occurred while downloading NLTK data: {str(e)}")
         st.info("You may need to download NLTK data manually or check your internet connection.")
+
 
 # Call this function at the start of your app
 download_nltk_data()
@@ -50,6 +50,7 @@ if 'scraping_complete' not in st.session_state:
 if 'parser_input' not in st.session_state:
     st.session_state.parser_input = ""
 
+
 # Function to load Lottie animation
 def load_lottieurl(url: str):
     try:
@@ -61,11 +62,13 @@ def load_lottieurl(url: str):
         logger.error(f"Error loading Lottie animation: {str(e)}")
         return None
 
+
 # Load Lottie animations
 lottie_scraping = load_lottieurl("https://lottie.host/dcf841a8-f778-42d3-bc94-fe832b850e7f/HB1oipPUP2.json")
 lottie_analyzing = load_lottieurl("https://lottie.host/e7b1797e-f02a-44be-b28f-c3e26c69fbd3/4PF5hVXPST.json")
 lottie_robot = load_lottieurl("https://lottie.host/2945d2be-6612-4bc3-8ffc-4bbaa755045b/y0olOO2xO7.json")
 lottie_sidebar = load_lottieurl("https://lottie.host/3af8aa11-aec4-4661-98a6-6396ff474e0f/YIpGN6tsQ9.json")
+
 
 # Function to get image as base64
 def get_image_as_base64(file):
@@ -75,6 +78,7 @@ def get_image_as_base64(file):
     except Exception as e:
         logger.error(f"Error loading background image: {str(e)}")
         return None
+
 
 # Set background image
 background_image = get_image_as_base64("gradient_blue.jpg")
@@ -90,6 +94,7 @@ if background_image:
         """,
         unsafe_allow_html=True
     )
+
 
 # Function to generate word cloud
 def generate_wordcloud(text):
@@ -129,14 +134,17 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+
 # Main app
 def main():
     # Sidebar for navigation
-    with st.sidebar:
+    if st.sidebar:
         st_lottie(lottie_sidebar, speed=1, width=150)
+    else:
+        st.image("https://via.placeholder.com/300x200?text=AI+Web+Scraper", use_column_width=True)
+
     st.sidebar.title("Navigation")
     page = st.sidebar.radio("Go to", ["Home", "Scraper & Analyzer", "About"])
-
 
     if page == "Home":
         st.markdown("<h1 class='pulse'>Groq A.I Web Scraper & Visualizer</h1>", unsafe_allow_html=True)
@@ -168,7 +176,6 @@ def main():
             if st.session_state.url:
                 progress_bar = st.progress(0)
                 status_text = st.empty()
-
 
                 def update_progress(progress, status):
                     progress_bar.progress(progress)
@@ -262,9 +269,10 @@ def main():
         col1, col2, col3 = st.columns(3)
         with col1:
             st.write("")
-            st.image("https://files.vecteezy.com/system/resource/files/15328491/vecteezy_artificial-consciousness-vector-icon-design_15328491_193.svg?response-content-disposition=attachment%3Bfilename%3Dvecteezy_artificial-consciousness-vector-icon-design_15328491.svg&Expires=1725258081&Signature=PR96c9BgsgV9ZQLjaAn4S95V-kY9UmWlf5dfmKP9VkFajQOvYBwMNCKLfYjpJwH7seFiklAH20hZw6U-UrjrGoxMiAzSsk7x2TELwlHy3HK2PjKWfdG0ukOkJUaL-rrtzcCJ7o4QBmANjGZCkXhIPD5QvMe46lu~Qgyz6yBhcvQ15Jn15og9SR51tPNY3~ZIKlWAri-TIPT-RErMk4HHY7LpMpbiFj0H9HbQC0CCF8iTiQPpZ77e3C-"
-                     "2R8mpSf2Jsz34E13HybcReU1WWYfGxQO1Wp5I5MiX0Z0eJQl-"
-                     "3Ysms8TcxIV7RUcey6f7gJIJgKA8L-z7qv2kZ2YTVXOVhQ__&Key-Pair-Id=K3714PYOSHV3HB", width=146)
+            st.image(
+                "https://files.vecteezy.com/system/resource/files/15328491/vecteezy_artificial-consciousness-vector-icon-design_15328491_193.svg?response-content-disposition=attachment%3Bfilename%3Dvecteezy_artificial-consciousness-vector-icon-design_15328491.svg&Expires=1725258081&Signature=PR96c9BgsgV9ZQLjaAn4S95V-kY9UmWlf5dfmKP9VkFajQOvYBwMNCKLfYjpJwH7seFiklAH20hZw6U-UrjrGoxMiAzSsk7x2TELwlHy3HK2PjKWfdG0ukOkJUaL-rrtzcCJ7o4QBmANjGZCkXhIPD5QvMe46lu~Qgyz6yBhcvQ15Jn15og9SR51tPNY3~ZIKlWAri-TIPT-RErMk4HHY7LpMpbiFj0H9HbQC0CCF8iTiQPpZ77e3C-"
+                "2R8mpSf2Jsz34E13HybcReU1WWYfGxQO1Wp5I5MiX0Z0eJQl-"
+                "3Ysms8TcxIV7RUcey6f7gJIJgKA8L-z7qv2kZ2YTVXOVhQ__&Key-Pair-Id=K3714PYOSHV3HB", width=146)
             st.write("Groq - AI Expert")
         with col2:
             st.image("https://api.dicebear.com/9.x/personas/svg?seed=Maggie", width=150)
@@ -292,6 +300,7 @@ def main():
         🚀 Powered by Groq AI | © 2024 Web Explorer
     </div>
     """, unsafe_allow_html=True)
+
 
 if __name__ == "__main__":
     main()
