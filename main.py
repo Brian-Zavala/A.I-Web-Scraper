@@ -13,9 +13,12 @@ import time
 import base64
 import logging
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Check for GROQ_API_KEY
-if not os.environ.get("GROQ_API_KEY"):
+if not os.getenv("GROQ_API_KEY"):
     st.error("GROQ_API_KEY is not set. Please set it as an environment variable.")
     st.stop()
 
