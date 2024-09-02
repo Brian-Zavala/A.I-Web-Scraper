@@ -2,14 +2,17 @@ import os
 import asyncio
 import json
 from groq import AsyncGroq
-from dotenv import load_dotenv
+import os
 
-load_dotenv()
+
+api_key = os.environ.get("GROQ_API_KEY")
+if api_key is None:
+    raise ValueError("GROQ_API_KEY environment variable is not set")
 
 
 class GroqParser:
     def __init__(self):
-        self.client = AsyncGroq(api_key=os.getenv("GROQ_API_KEY"))
+        self.client = AsyncGroq(api_key=os.environ.get(api_key))
 
     async def analyze_text(self, text, instruction):
         prompt = self.get_prompt(text, instruction)
