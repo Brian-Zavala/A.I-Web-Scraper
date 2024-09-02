@@ -1,7 +1,7 @@
 import streamlit as st
 from streamlit_lottie import st_lottie
 import requests
-from scraper import scrape_website, extract_url, clean_url, batch_max_url
+from scraper import scrape_website, extract_url, clean_url, batch_max_url, scrape_with_progress
 from llm_parser import groq_parser
 import nltk
 import ssl
@@ -111,26 +111,6 @@ def generate_wordcloud(text):
         st.error(f"An error occurred while generating the word cloud: {str(e)}")
         return None
 
-# Function to scrape website with progress updates
-def scrape_with_progress(url, progress_callback):
-    progress_callback(0, "Initializing scraper...")
-    time.sleep(1)  # Simulate initialization time
-
-    progress_callback(20, "Fetching webpage...")
-    html_content = scrape_website(url)
-
-    progress_callback(40, "Extracting content...")
-    extracted_content = extract_url(html_content)
-
-    progress_callback(60, "Cleaning data...")
-    cleaned_content = clean_url(extracted_content)
-
-    progress_callback(80, "Preparing for analysis...")
-    data_bits = batch_max_url(cleaned_content)
-
-    progress_callback(100, "Scraping complete!")
-
-    return cleaned_content,
 
 # Custom CSS for animations and styling
 st.markdown("""
@@ -207,7 +187,7 @@ def main():
 
                     # Display a sample of the cleaned content
                     with st.expander("View Scraped Content Sample"):
-                        st.text_area("Cleaned Content Sample", st.session_state.cleaned_content[:500] + "...",
+                        st.text_area("Cleaned Content Sample", st.session_state.cleaned_content[:1000] + "...",
                                      height=200)
 
                 except Exception as e:

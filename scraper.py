@@ -6,6 +6,7 @@ from bs4 import BeautifulSoup
 import os
 from dotenv import load_dotenv
 import time
+from typing import Callable, Tuple, List
 
 load_dotenv()
 
@@ -13,7 +14,6 @@ SBR_WEBDRIVER = os.getenv('CLOUD_DRIVER')
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
 
 def scrape_website(site):
     logger.info(f"Scraping website: {site}")
@@ -46,44 +46,33 @@ def scrape_website(site):
 
     return None
 
+def scrape_with_progress(url: str, progress_callback: Callable[[int, str], None]) -> Tuple[str, List[str]]:
+    progress_callback(0, "Initializing scraper...")
+    time.sleep(1)  # Simulate initialization time
 
-def scrape_with_progress(url, progress_callback):
-    try:
-        progress_callback(0, "Initializing scraper...")
-        time.sleep(1)  # Simulate initialization time
+    progress_callback(20, "Fetching webpage...")
+    html_content = scrape_website(url)
+    if html_content is None:
+        raise Exception("Failed to fetch webpage content")
 
-        progress_callback(10, "Connecting to website...")
-        DOM = scrape_website(url)
-        if DOM is None:
-            raise Exception("Failed to retrieve page content")
+    progress_callback(40, "Extracting content...")
+    extracted_content = extract_url(html_content)
 
-        progress_callback(40, "Extracting content...")
-        page_content = extract_url(DOM)
-        if not page_content:
-            raise Exception("Failed to extract content from DOM")
+    progress_callback(60, "Cleaning data...")
+    cleaned_content = clean_url(extracted_content)
 
-        progress_callback(70, "Cleaning and processing data...")
-        clean_page = clean_url(page_content)
-        if not clean_page:
-            raise Exception("Failed to clean and process data")
+    progress_callback(80, "Preparing for analysis...")
+    data_bits = batch_max_url(cleaned_content)
 
-        progress_callback(90, "Finalizing...")
-        time.sleep(1)  # Simulate finalization time
-        progress_callback(100, "Scraping complete!")
+    progress_callback(100, "Scraping complete!")
 
-        return clean_page
-    except Exception as e:
-        logger.error(f"Error during scraping: {str(e)}")
-        progress_callback(100, f"Error: {str(e)}")
-        return None
-
+    return cleaned_content, data_bits
 
 def extract_url(page):
     if not page:
         return ""
     soup = BeautifulSoup(page, 'html.parser')
     return str(soup.body) if soup.body else ""
-
 
 def clean_url(body_text):
     if not body_text:
@@ -92,7 +81,6 @@ def clean_url(body_text):
     for element in soup(["style", "script"]):
         element.decompose()
     return '\n'.join(line.strip() for line in soup.get_text(separator='\n').splitlines() if line.strip())
-
 
 def batch_max_url(content, max_length=512):
     return [content[i:i + max_length] for i in range(0, len(content), max_length)]
