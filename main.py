@@ -64,7 +64,6 @@ def load_lottieurl(url: str):
 
 
 # Load Lottie animations
-lottie_scraping = load_lottieurl("https://lottie.host/dcf841a8-f778-42d3-bc94-fe832b850e7f/HB1oipPUP2.json")
 lottie_analyzing = load_lottieurl("https://lottie.host/e7b1797e-f02a-44be-b28f-c3e26c69fbd3/4PF5hVXPST.json")
 lottie_robot = load_lottieurl("https://lottie.host/2945d2be-6612-4bc3-8ffc-4bbaa755045b/y0olOO2xO7.json")
 lottie_sidebar = load_lottieurl("https://lottie.host/3af8aa11-aec4-4661-98a6-6396ff474e0f/YIpGN6tsQ9.json")
@@ -134,8 +133,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-with st.sidebar:
-    st_lottie(lottie_sidebar, speed=1, width=150)
 
 # Main app
 def main():

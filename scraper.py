@@ -19,10 +19,8 @@ logger = logging.getLogger(__name__)
 def scrape_website(site):
     logger.info(f"Scraping website: {site}")
 
-
-    # If simple request fails, try with Selenium
+     # try with Selenium
     chrome_options = ChromeOptions()
-
     try:
         sbr_connection = ChromiumRemoteConnection(SBR_WEBDRIVER, 'goog', 'chrome')
         with Remote(sbr_connection, options=chrome_options) as driver:
