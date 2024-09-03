@@ -41,7 +41,7 @@ def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 
     let isSmallScreen = window.innerWidth < 768;
     let isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     let lastInteractionTime = 0;
-    const mobileEffectDuration = 800; // 800ms total duration for mobile effects
+    const mobileEffectDuration = 200; // 800ms total duration for mobile effects
 
     function resizeCanvas() {{
         width = window.innerWidth;
