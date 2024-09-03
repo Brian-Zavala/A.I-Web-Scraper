@@ -3,7 +3,7 @@ import random
 
 
 def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 255, 255, 0.8)',
-                                        pulse_color='rgb(255, 0, 230)', spark_color='rgba(255, 255, 255, 0.8)',
+                                        pulse_color='rgba(255, 255, 0, 0.8)', spark_color='rgba(255, 255, 255, 0.8)',
                                         lightning_color='rgba(255, 255, 255, 0.8)'):
     components.html(f"""
     <style>
@@ -162,7 +162,7 @@ def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 
             this.x = x;
             this.y = y;
             this.branches = [];
-            this.lifetime = Math.random() * 30 + 30;
+            this.lifetime = Math.random() * 20 + 10;
             this.createBranches();
         }}
 
@@ -194,7 +194,7 @@ def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 
         }}
 
         draw() {{
-            const opacity = this.lifetime / 30;
+            const opacity = this.lifetime / 20;
             for (let i = 0; i < this.branches.length; i++) {{
                 const branch = this.branches[i];
                 ctx.strokeStyle = branch.color.replace('0.5', opacity);
