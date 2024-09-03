@@ -102,7 +102,7 @@ def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 
                 }}
             }}
 
-            if (isMobileDevice && currentTime - this.pulseCreationTime > mobileEffectDuration) {{
+            if (isMobileDevice && this.pulsing && currentTime - this.pulseCreationTime > mobileEffectDuration) {{
                 this.pulsing = false;
             }}
 
@@ -282,6 +282,13 @@ def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 
         const y = (event.clientY || event.touches[0].clientY) - rect.top;
         mouse.x = x;
         mouse.y = y;
+
+        // Reset all signals' pulsing state on each interaction
+        if (isMobileDevice) {{
+            signals.forEach(signal => {{
+                signal.pulsing = false;
+            }});
+        }}
     }}
 
     document.addEventListener('mousemove', handleInteraction);
@@ -296,6 +303,12 @@ def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 
     document.addEventListener('touchend', () => {{
         mouse.x = null;
         mouse.y = null;
+        // Reset all signals' pulsing state on touch end
+        if (isMobileDevice) {{
+            signals.forEach(signal => {{
+                signal.pulsing = false;
+            }});
+        }}
     }});
 
     init();
