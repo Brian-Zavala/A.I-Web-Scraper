@@ -2,7 +2,7 @@ import streamlit.components.v1 as components
 import random
 
 
-def brain_electrical_signals_background(num_signals=30, signal_color='rgba(255, 255, 255, 0.8)',
+def brain_electrical_signals_background(num_signals=34, signal_color='rgba(255, 255, 255, 0.8)',
                                         pulse_color='rgba(255, 255, 0, 0.8)', spark_color='rgba(255, 255, 255, 0.8)'):
     components.html(f"""
     <style>
