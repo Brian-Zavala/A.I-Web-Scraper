@@ -1,6 +1,5 @@
 import streamlit.components.v1 as components
 
-
 def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 255, 255, 0.8)',
                                         pulse_color='rgb(255, 0, 238)', spark_color='rgba(255, 255, 255, 0.8)',
                                         lightning_color='rgba(255, 255, 255, 0.8)'):
@@ -55,7 +54,7 @@ def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 
             this.y = y;
             this.speedX = Math.random() * 3 - 1.5;
             this.speedY = Math.random() * 3 - 1.5;
-            this.lifetime = isMobile ? 1 : Math.random() * 50 + 20;
+            this.lifetime = Math.random() * 50 + 20;
             this.initialLifetime = this.lifetime;
             this.pulsing = false;
         }}
@@ -118,8 +117,8 @@ def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 
             this.speedX = Math.random() * 6 - 3;
             this.speedY = Math.random() * 6 - 3;
             this.size = Math.random() * 4 + 1;
-            this.lifetime = isMobile ? 1 : Math.random() * 10 + 5;
-            this.trailLength = isMobile ? 1 : Math.random() * 10 + 3;
+            this.lifetime = isMobile ? 2 : Math.random() * 10 + 5;
+            this.trailLength = isMobile ? 3 : Math.random() * 10 + 3;
             this.trail = [];
         }}
 
@@ -127,7 +126,7 @@ def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 
             this.x += this.speedX;
             this.y += this.speedY;
             this.size *= 0.95;
-            this.lifetime -= isMobile ? this.lifetime : 1;
+            this.lifetime -= isMobile ? 0.5 : 1;
 
             this.trail.push({{ x: this.x, y: this.y }});
             if (this.trail.length > this.trailLength) {{
@@ -136,7 +135,7 @@ def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 
         }}
 
         draw() {{
-            const opacity = this.lifetime / (isMobile ? 1 : 10);
+            const opacity = this.lifetime / (isMobile ? 2 : 10);
             ctx.fillStyle = `${{'{spark_color}'.slice(0, -4)}}${{opacity}})`;
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
@@ -162,7 +161,7 @@ def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 
             this.x = x;
             this.y = y;
             this.branches = [];
-            this.lifetime = isMobile ? 1 : Math.random() * 5 + 2;
+            this.lifetime = isMobile ? 2 : Math.random() * 5 + 2;
             this.createBranches();
         }}
 
@@ -190,11 +189,11 @@ def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 
         }}
 
         update() {{
-            this.lifetime -= isMobile ? this.lifetime : 1;
+            this.lifetime -= isMobile ? 0.5 : 1;
         }}
 
         draw() {{
-            const opacity = this.lifetime / (isMobile ? 1 : 5);
+            const opacity = this.lifetime / (isMobile ? 2 : 5);
             for (let i = 0; i < this.branches.length; i++) {{
                 const branch = this.branches[i];
                 ctx.strokeStyle = branch.color.replace('0.5', opacity);
@@ -248,25 +247,27 @@ def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 
         requestAnimationFrame(animate);
     }}
 
-    document.addEventListener('mousemove', (event) => {{
-        mouse.x = event.clientX;
-        mouse.y = event.clientY;
-    }});
+    function handleInteraction(event) {{
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX || event.touches[0].clientX;
+        const y = event.clientY || event.touches[0].clientY;
+        mouse.x = x - rect.left;
+        mouse.y = y - rect.top;
+    }}
 
-    document.addEventListener('touchmove', (event) => {{
-        mouse.x = event.touches[0].clientX;
-        mouse.y = event.touches[0].clientY;
-    }});
-
-    document.addEventListener('mouseleave', () => {{
+    function endInteraction() {{
         mouse.x = null;
         mouse.y = null;
-    }});
+    }}
 
-    document.addEventListener('touchend', () => {{
-        mouse.x = null;
-        mouse.y = null;
-    }});
+    if (isMobile) {{
+        canvas.addEventListener('touchstart', handleInteraction);
+        canvas.addEventListener('touchmove', handleInteraction);
+        canvas.addEventListener('touchend', endInteraction);
+    }} else {{
+        canvas.addEventListener('mousemove', handleInteraction);
+        canvas.addEventListener('mouseleave', endInteraction);
+    }}
 
     init();
     animate();
