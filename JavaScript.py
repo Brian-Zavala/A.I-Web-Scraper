@@ -1,7 +1,7 @@
 import streamlit.components.v1 as components
 
 
-def interactive_background(num_nodes=40, node_color='rgb(0, 0, 0)', connection_color='rgb(255, 255, 255)'):
+def interactive_background(num_nodes=20, node_color='rgb(0, 0, 0)', connection_color='rgb(255, 255, 255)'):
     components.html(f"""
         <style>
         #ai-neural-network {{

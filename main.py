@@ -177,7 +177,7 @@ def main():
         st.markdown("<h1 class='pulse'>Groq A.I Web Scraper & Visualizer</h1>", unsafe_allow_html=True)
         st.write("This app combines the power of web scraping, Groq AI, and interactive visualizations.")
         if lottie_robot:
-            st_lottie(lottie_robot,quality="high", speed=1, width=700, key="robot")
+            st_lottie(lottie_robot,quality="high", speed=1, height=300, key="robot")
         else:
             st.image("https://via.placeholder.com/300x200?text=AI+Web+Scraper", use_column_width=True)
 
