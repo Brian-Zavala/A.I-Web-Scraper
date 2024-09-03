@@ -2,8 +2,9 @@ import streamlit.components.v1 as components
 import random
 
 
-def brain_electrical_signals_background(num_signals=34, signal_color='rgba(255, 255, 255, 0.8)',
-                                        pulse_color='rgba(255, 255, 0, 0.8)', spark_color='rgba(255, 255, 255, 0.8)'):
+def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 255, 255, 0.8)',
+                                        pulse_color='rgb(255, 0, 230)', spark_color='rgba(255, 255, 255, 0.8)',
+                                        lightning_color='rgba(255, 255, 255, 0.8)'):
     components.html(f"""
     <style>
     body {{
@@ -34,6 +35,7 @@ def brain_electrical_signals_background(num_signals=34, signal_color='rgba(255, 
     let width, height;
     let signals = [];
     let sparks = [];
+    let lightningBolts = [];
     const numSignals = {num_signals};
     let mouse = {{ x: null, y: null, radius: 100 }};
 
@@ -76,6 +78,7 @@ def brain_electrical_signals_background(num_signals=34, signal_color='rgba(255, 
                 if (distance < mouse.radius) {{
                     this.pulsing = true;
                     sparks.push(new Spark(this.x, this.y));
+                    lightningBolts.push(new LightningBolt(this.x, this.y));
                 }}
             }}
 
@@ -112,10 +115,12 @@ def brain_electrical_signals_background(num_signals=34, signal_color='rgba(255, 
         constructor(x, y) {{
             this.x = x;
             this.y = y;
-            this.speedX = Math.random() * 4 - 2;
-            this.speedY = Math.random() * 4 - 2;
-            this.size = Math.random() * 3 + 1;
-            this.lifetime = Math.random() * 20 + 10;
+            this.speedX = Math.random() * 6 - 3;
+            this.speedY = Math.random() * 6 - 3;
+            this.size = Math.random() * 4 + 1;
+            this.lifetime = Math.random() * 30 + 10;
+            this.trailLength = Math.random() * 20 + 5;
+            this.trail = [];
         }}
 
         update() {{
@@ -123,14 +128,84 @@ def brain_electrical_signals_background(num_signals=34, signal_color='rgba(255, 
             this.y += this.speedY;
             this.size *= 0.95;
             this.lifetime -= 1;
+
+            this.trail.push({{ x: this.x, y: this.y }});
+            if (this.trail.length > this.trailLength) {{
+                this.trail.shift();
+            }}
         }}
 
         draw() {{
-            const opacity = this.lifetime / 20;
+            const opacity = this.lifetime / 30;
             ctx.fillStyle = `${{'{spark_color}'.slice(0, -4)}}${{opacity}})`;
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
             ctx.fill();
+
+            ctx.strokeStyle = `${{'{spark_color}'.slice(0, -4)}}${{opacity}})`;
+            ctx.lineWidth = this.size;
+            ctx.beginPath();
+            ctx.moveTo(this.trail[0].x, this.trail[0].y);
+            for (let i = 1; i < this.trail.length; i++) {{
+                ctx.lineTo(this.trail[i].x, this.trail[i].y);
+            }}
+            ctx.stroke();
+        }}
+
+        isAlive() {{
+            return this.lifetime > 0;
+        }}
+    }}
+
+    class LightningBolt {{
+        constructor(x, y) {{
+            this.x = x;
+            this.y = y;
+            this.branches = [];
+            this.lifetime = Math.random() * 30 + 30;
+            this.createBranches();
+        }}
+
+        createBranches() {{
+            const numBranches = Math.random() * 2 + 1;
+            for (let i = 0; i < numBranches; i++) {{
+                const branch = {{
+                    x: this.x,
+                    y: this.y,
+                    points: [],
+                    color: `${{'{lightning_color}'.slice(0, -4)}}${{Math.random() * 0.3 + 0.2}})`
+                }};
+
+                const numPoints = Math.random() * 3 + 2;
+                for (let j = 0; j < numPoints; j++) {{
+                    const offsetX = Math.random() * 100 - 50;
+                    const offsetY = Math.random() * 100 - 50;
+                    branch.points.push({{ x: branch.x + offsetX, y: branch.y + offsetY }});
+                    branch.x += offsetX;
+                    branch.y += offsetY;
+                }}
+
+                this.branches.push(branch);
+            }}
+        }}
+
+        update() {{
+            this.lifetime -= 1;
+        }}
+
+        draw() {{
+            const opacity = this.lifetime / 30;
+            for (let i = 0; i < this.branches.length; i++) {{
+                const branch = this.branches[i];
+                ctx.strokeStyle = branch.color.replace('0.5', opacity);
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(branch.points[0].x, branch.points[0].y);
+                for (let j = 1; j < branch.points.length; j++) {{
+                    ctx.lineTo(branch.points[j].x, branch.points[j].y);
+                }}
+                ctx.stroke();
+            }}
         }}
 
         isAlive() {{
@@ -159,6 +234,14 @@ def brain_electrical_signals_background(num_signals=34, signal_color='rgba(255, 
             sparks[i].draw();
             if (!sparks[i].isAlive()) {{
                 sparks.splice(i, 1);
+            }}
+        }}
+
+        for (let i = lightningBolts.length - 1; i >= 0; i--) {{
+            lightningBolts[i].update();
+            lightningBolts[i].draw();
+            if (!lightningBolts[i].isAlive()) {{
+                lightningBolts.splice(i, 1);
             }}
         }}
 
