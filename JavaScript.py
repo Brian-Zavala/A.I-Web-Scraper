@@ -1,4 +1,6 @@
 import streamlit.components.v1 as components
+import random
+
 
 def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 255, 255, 0.8)',
                                         pulse_color='rgb(255, 0, 238)', spark_color='rgba(255, 255, 255, 0.8)',
@@ -36,13 +38,17 @@ def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 
     let lightningBolts = [];
     const numSignals = {num_signals};
     let mouse = {{ x: null, y: null, radius: 100 }};
-    let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    let isSmallScreen = window.innerWidth < 768;
+    let isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    let lastInteractionTime = 0;
+    const mobileDecayTime = 100; // 100ms decay time for mobile
 
     function resizeCanvas() {{
         width = window.innerWidth;
         height = window.innerHeight;
         canvas.width = width;
         canvas.height = height;
+        isSmallScreen = window.innerWidth < 768;
     }}
 
     window.addEventListener('resize', resizeCanvas);
@@ -54,12 +60,12 @@ def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 
             this.y = y;
             this.speedX = Math.random() * 3 - 1.5;
             this.speedY = Math.random() * 3 - 1.5;
-            this.lifetime = Math.random() * 50 + 20;
+            this.lifetime = Math.random() * 200 + 50;
             this.initialLifetime = this.lifetime;
             this.pulsing = false;
         }}
 
-        update() {{
+        update(currentTime) {{
             this.x += this.speedX;
             this.y += this.speedY;
 
@@ -82,7 +88,11 @@ def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 
             }}
 
             if (this.pulsing) {{
-                this.lifetime -= isMobile ? this.initialLifetime : 2;
+                if (isMobileDevice && currentTime - lastInteractionTime > mobileDecayTime) {{
+                    this.pulsing = false;
+                }} else {{
+                    this.lifetime -= 2;
+                }}
             }} else {{
                 this.lifetime -= 1;
             }}
@@ -117,16 +127,21 @@ def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 
             this.speedX = Math.random() * 6 - 3;
             this.speedY = Math.random() * 6 - 3;
             this.size = Math.random() * 4 + 1;
-            this.lifetime = isMobile ? 2 : Math.random() * 10 + 5;
-            this.trailLength = isMobile ? 3 : Math.random() * 10 + 3;
+            this.lifetime = isMobileDevice ? mobileDecayTime : Math.random() * 30 + 10;
+            this.trailLength = Math.random() * 20 + 5;
             this.trail = [];
         }}
 
-        update() {{
+        update(currentTime) {{
             this.x += this.speedX;
             this.y += this.speedY;
             this.size *= 0.95;
-            this.lifetime -= isMobile ? 0.5 : 1;
+
+            if (isMobileDevice) {{
+                this.lifetime = Math.max(0, mobileDecayTime - (currentTime - lastInteractionTime));
+            }} else {{
+                this.lifetime -= 1;
+            }}
 
             this.trail.push({{ x: this.x, y: this.y }});
             if (this.trail.length > this.trailLength) {{
@@ -135,7 +150,7 @@ def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 
         }}
 
         draw() {{
-            const opacity = this.lifetime / (isMobile ? 2 : 10);
+            const opacity = this.lifetime / (isMobileDevice ? mobileDecayTime : 30);
             ctx.fillStyle = `${{'{spark_color}'.slice(0, -4)}}${{opacity}})`;
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
@@ -161,7 +176,7 @@ def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 
             this.x = x;
             this.y = y;
             this.branches = [];
-            this.lifetime = isMobile ? 2 : Math.random() * 5 + 2;
+            this.lifetime = isMobileDevice ? mobileDecayTime : (isSmallScreen ? 2 : Math.random() * 20 + 10);
             this.createBranches();
         }}
 
@@ -188,12 +203,17 @@ def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 
             }}
         }}
 
-        update() {{
-            this.lifetime -= isMobile ? 0.5 : 1;
+        update(currentTime) {{
+            if (isMobileDevice) {{
+                this.lifetime = Math.max(0, mobileDecayTime - (currentTime - lastInteractionTime));
+            }} else {{
+                this.lifetime -= 1;
+            }}
         }}
 
         draw() {{
-            const opacity = this.lifetime / (isMobile ? 2 : 5);
+            const opacity = isMobileDevice ? this.lifetime / mobileDecayTime : 
+                            (isSmallScreen ? this.lifetime / 2 : this.lifetime / 20);
             for (let i = 0; i < this.branches.length; i++) {{
                 const branch = this.branches[i];
                 ctx.strokeStyle = branch.color.replace('0.5', opacity);
@@ -221,15 +241,15 @@ def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 
         }}
     }}
 
-    function animate() {{
+    function animate(currentTime) {{
         ctx.clearRect(0, 0, width, height);
         for (let i = 0; i < signals.length; i++) {{
-            signals[i].update();
+            signals[i].update(currentTime);
             signals[i].draw();
         }}
 
         for (let i = sparks.length - 1; i >= 0; i--) {{
-            sparks[i].update();
+            sparks[i].update(currentTime);
             sparks[i].draw();
             if (!sparks[i].isAlive()) {{
                 sparks.splice(i, 1);
@@ -237,7 +257,7 @@ def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 
         }}
 
         for (let i = lightningBolts.length - 1; i >= 0; i--) {{
-            lightningBolts[i].update();
+            lightningBolts[i].update(currentTime);
             lightningBolts[i].draw();
             if (!lightningBolts[i].isAlive()) {{
                 lightningBolts.splice(i, 1);
@@ -248,28 +268,29 @@ def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 
     }}
 
     function handleInteraction(event) {{
+        lastInteractionTime = performance.now();
         const rect = canvas.getBoundingClientRect();
-        const x = event.clientX || event.touches[0].clientX;
-        const y = event.clientY || event.touches[0].clientY;
-        mouse.x = x - rect.left;
-        mouse.y = y - rect.top;
+        const x = (event.clientX || event.touches[0].clientX) - rect.left;
+        const y = (event.clientY || event.touches[0].clientY) - rect.top;
+        mouse.x = x;
+        mouse.y = y;
     }}
 
-    function endInteraction() {{
+    document.addEventListener('mousemove', handleInteraction);
+    document.addEventListener('touchmove', handleInteraction);
+    document.addEventListener('touchstart', handleInteraction);
+
+    document.addEventListener('mouseleave', () => {{
         mouse.x = null;
         mouse.y = null;
-    }}
+    }});
 
-    if (isMobile) {{
-        canvas.addEventListener('touchstart', handleInteraction);
-        canvas.addEventListener('touchmove', handleInteraction);
-        canvas.addEventListener('touchend', endInteraction);
-    }} else {{
-        canvas.addEventListener('mousemove', handleInteraction);
-        canvas.addEventListener('mouseleave', endInteraction);
-    }}
+    document.addEventListener('touchend', () => {{
+        mouse.x = null;
+        mouse.y = null;
+    }});
 
     init();
-    animate();
+    requestAnimationFrame(animate);
     </script>
     """)
