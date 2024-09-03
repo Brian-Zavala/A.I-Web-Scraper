@@ -41,7 +41,8 @@ def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 
     let isSmallScreen = window.innerWidth < 768;
     let isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     let lastInteractionTime = 0;
-    const mobileDecayTime = 100; // 100ms decay time for mobile
+    const mobileVisibleTime = 500; // 500ms visible time for mobile
+    const mobileDecayTime = 300; // 300ms decay time for mobile
 
     function resizeCanvas() {{
         width = window.innerWidth;
@@ -88,8 +89,12 @@ def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 
             }}
 
             if (this.pulsing) {{
-                if (isMobileDevice && currentTime - lastInteractionTime > mobileDecayTime) {{
-                    this.pulsing = false;
+                if (isMobileDevice) {{
+                    const timeSinceInteraction = currentTime - lastInteractionTime;
+                    if (timeSinceInteraction > mobileVisibleTime) {{
+                        const decayProgress = Math.min(1, (timeSinceInteraction - mobileVisibleTime) / mobileDecayTime);
+                        this.lifetime -= 2 * decayProgress;
+                    }}
                 }} else {{
                     this.lifetime -= 2;
                 }}
@@ -127,7 +132,7 @@ def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 
             this.speedX = Math.random() * 6 - 3;
             this.speedY = Math.random() * 6 - 3;
             this.size = Math.random() * 4 + 1;
-            this.lifetime = isMobileDevice ? mobileDecayTime : Math.random() * 30 + 10;
+            this.lifetime = isMobileDevice ? mobileVisibleTime + mobileDecayTime : Math.random() * 30 + 10;
             this.trailLength = Math.random() * 20 + 5;
             this.trail = [];
         }}
@@ -138,7 +143,11 @@ def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 
             this.size *= 0.95;
 
             if (isMobileDevice) {{
-                this.lifetime = Math.max(0, mobileDecayTime - (currentTime - lastInteractionTime));
+                const timeSinceInteraction = currentTime - lastInteractionTime;
+                if (timeSinceInteraction > mobileVisibleTime) {{
+                    const decayProgress = Math.min(1, (timeSinceInteraction - mobileVisibleTime) / mobileDecayTime);
+                    this.lifetime = mobileVisibleTime + mobileDecayTime - (decayProgress * mobileDecayTime);
+                }}
             }} else {{
                 this.lifetime -= 1;
             }}
@@ -150,7 +159,7 @@ def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 
         }}
 
         draw() {{
-            const opacity = this.lifetime / (isMobileDevice ? mobileDecayTime : 30);
+            const opacity = this.lifetime / (isMobileDevice ? (mobileVisibleTime + mobileDecayTime) : 30);
             ctx.fillStyle = `${{'{spark_color}'.slice(0, -4)}}${{opacity}})`;
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
@@ -176,7 +185,7 @@ def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 
             this.x = x;
             this.y = y;
             this.branches = [];
-            this.lifetime = isMobileDevice ? mobileDecayTime : (isSmallScreen ? 2 : Math.random() * 20 + 10);
+            this.lifetime = isMobileDevice ? mobileVisibleTime + mobileDecayTime : (isSmallScreen ? 2 : Math.random() * 20 + 10);
             this.createBranches();
         }}
 
@@ -205,14 +214,18 @@ def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 
 
         update(currentTime) {{
             if (isMobileDevice) {{
-                this.lifetime = Math.max(0, mobileDecayTime - (currentTime - lastInteractionTime));
+                const timeSinceInteraction = currentTime - lastInteractionTime;
+                if (timeSinceInteraction > mobileVisibleTime) {{
+                    const decayProgress = Math.min(1, (timeSinceInteraction - mobileVisibleTime) / mobileDecayTime);
+                    this.lifetime = mobileVisibleTime + mobileDecayTime - (decayProgress * mobileDecayTime);
+                }}
             }} else {{
                 this.lifetime -= 1;
             }}
         }}
 
         draw() {{
-            const opacity = isMobileDevice ? this.lifetime / mobileDecayTime : 
+            const opacity = isMobileDevice ? this.lifetime / (mobileVisibleTime + mobileDecayTime) : 
                             (isSmallScreen ? this.lifetime / 2 : this.lifetime / 20);
             for (let i = 0; i < this.branches.length; i++) {{
                 const branch = this.branches[i];
