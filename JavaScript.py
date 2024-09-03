@@ -38,12 +38,14 @@ def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 
     let lightningBolts = [];
     const numSignals = {num_signals};
     let mouse = {{ x: null, y: null, radius: 100 }};
+    let isSmallScreen = window.innerWidth < 768; // Adjust the breakpoint as needed
 
     function resizeCanvas() {{
         width = window.innerWidth;
         height = window.innerHeight;
         canvas.width = width;
         canvas.height = height;
+        isSmallScreen = window.innerWidth < 768; // Update the small screen flag on resize
     }}
 
     window.addEventListener('resize', resizeCanvas);
@@ -162,7 +164,7 @@ def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 
             this.x = x;
             this.y = y;
             this.branches = [];
-            this.lifetime = Math.random() * 20 + 10;
+            this.lifetime = isSmallScreen ? Math.random() * 10 + 5 : Math.random() * 20 + 10;
             this.createBranches();
         }}
 
@@ -194,7 +196,7 @@ def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 
         }}
 
         draw() {{
-            const opacity = this.lifetime / 20;
+            const opacity = isSmallScreen ? this.lifetime / 10 : this.lifetime / 20;
             for (let i = 0; i < this.branches.length; i++) {{
                 const branch = this.branches[i];
                 ctx.strokeStyle = branch.color.replace('0.5', opacity);
