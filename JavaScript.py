@@ -3,7 +3,7 @@ import random
 
 
 def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 255, 255, 0.8)',
-                                        pulse_color='rgba(255, 255, 0, 0.8)', spark_color='rgba(255, 255, 255, 0.8)',
+                                        pulse_color='rgb(255, 0, 238)', spark_color='rgba(255, 255, 255, 0.8)',
                                         lightning_color='rgba(255, 255, 255, 0.8)'):
     components.html(f"""
     <style>
@@ -38,6 +38,7 @@ def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 
     let lightningBolts = [];
     const numSignals = {num_signals};
     let mouse = {{ x: null, y: null, radius: 100 }};
+    let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
     function resizeCanvas() {{
         width = window.innerWidth;
@@ -55,7 +56,7 @@ def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 
             this.y = y;
             this.speedX = Math.random() * 3 - 1.5;
             this.speedY = Math.random() * 3 - 1.5;
-            this.lifetime = Math.random() * 50 + 20;
+            this.lifetime = isMobile ? 1 : Math.random() * 50 + 20;
             this.initialLifetime = this.lifetime;
             this.pulsing = false;
         }}
@@ -118,8 +119,8 @@ def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 
             this.speedX = Math.random() * 6 - 3;
             this.speedY = Math.random() * 6 - 3;
             this.size = Math.random() * 4 + 1;
-            this.lifetime = Math.random() * 10 + 5;
-            this.trailLength = Math.random() * 10 + 3;
+            this.lifetime = isMobile ? 1 : Math.random() * 10 + 5;
+            this.trailLength = isMobile ? 1 : Math.random() * 10 + 3;
             this.trail = [];
         }}
 
@@ -162,7 +163,7 @@ def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 
             this.x = x;
             this.y = y;
             this.branches = [];
-            this.lifetime = Math.random() * 5 + 2;
+            this.lifetime = isMobile ? 1 : Math.random() * 5 + 2;
             this.createBranches();
         }}
 
