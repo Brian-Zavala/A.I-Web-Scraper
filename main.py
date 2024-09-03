@@ -236,6 +236,11 @@ def main():
 
             if st.button('🔮 Analyze', key='parse_button'):
                 if st.session_state.parser_input:
+                    with st.expander("🔬 Analysis Dashboard", expanded=True):
+                        st.markdown("<h3 class='pulse'>🧙‍♂️ The AI is weaving its magic...</h3>",
+                                    unsafe_allow_html=True)
+                        if lottie_analyzing:
+                            st_lottie(lottie_analyzing, speed=1, height=200, key="analyzing")
                     try:
                         st.session_state.parsed_result = groq_parser(
                             st.session_state.data_bits,
@@ -358,5 +363,3 @@ if __name__ == "__main__":
     st.write("")
     st.write("")
     st.write("")
-    brain_electrical_signals_background()
-
