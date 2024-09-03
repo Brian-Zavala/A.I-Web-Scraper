@@ -1,8 +1,9 @@
 import streamlit as st
 from streamlit_lottie import st_lottie
+from JavaScript import interactive_background
 import requests
 from scraper import scrape_with_progress
-from llm_parser import groq_parser
+from llm_parser import groq_parser, get_preview, format_parsed_result
 import nltk
 import ssl
 from nltk.corpus import stopwords
@@ -13,13 +14,36 @@ import base64
 import logging
 
 st.set_page_config(layout="wide", page_title="AI Web Scraper & Analyzer", page_icon="🌐", initial_sidebar_state="auto")
+# Add custom CSS
+st.markdown("""
+     <style>
+     .stApp {
+         background: transparent;
+     }
+     [data-testid="stHeader"] {
+         background-color: rgba(0,0,0,0.5);
+     }
+     [data-testid="stToolbar"] {
+         background-color: rgba(0,0,0,0.5);
+     }
+     .stApp > header {
+         background-color: transparent;
+     }
+     div[data-testid="stStatusWidget"] {
+         z-index: 100;
+     }
+     </style>
+ """, unsafe_allow_html=True)
+
+# Add interactive background
+interactive_background()
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-@st.cache_resource
+
 def download_nltk_data():
     try:
         nltk.download('punkt', quiet=True, raise_on_error=True)
@@ -49,6 +73,9 @@ if 'scraping_complete' not in st.session_state:
     st.session_state.scraping_complete = False
 if 'parser_input' not in st.session_state:
     st.session_state.parser_input = ""
+if 'file_format' not in st.session_state:
+    st.session_state.file_format = 'txt'
+
 
 
 # Function to load Lottie animation
@@ -78,7 +105,6 @@ def get_image_as_base64(file):
         logger.error(f"Error loading background image: {str(e)}")
         return None
 
-
 # Set background image
 background_image = get_image_as_base64("gradient_blue.jpg")
 if background_image:
@@ -95,7 +121,9 @@ if background_image:
     )
 
 
+
 # Function to generate word cloud
+@st.cache_data
 def generate_wordcloud(text):
     try:
         stop_words = set(stopwords.words('english'))
@@ -135,8 +163,12 @@ st.markdown("""
 
 with st.sidebar:
     st_lottie(lottie_sidebar, speed=1, width=150)
+
+
 # Main app
 def main():
+
+
     # Sidebar for navigation
     st.sidebar.title("Navigation")
     page = st.sidebar.radio("Go to", ["Home", "Scraper & Analyzer", "About"])
@@ -145,7 +177,7 @@ def main():
         st.markdown("<h1 class='pulse'>Groq A.I Web Scraper & Visualizer</h1>", unsafe_allow_html=True)
         st.write("This app combines the power of web scraping, Groq AI, and interactive visualizations.")
         if lottie_robot:
-            st_lottie(lottie_robot, speed=1, width=300, key="robot")
+            st_lottie(lottie_robot,quality="high", speed=1, width=700, key="robot")
         else:
             st.image("https://via.placeholder.com/300x200?text=AI+Web+Scraper", use_column_width=True)
 
@@ -171,7 +203,8 @@ def main():
             if st.session_state.url:
                 progress_bar = st.progress(0)
                 status_text = st.empty()
-                st.info("Note: Some websites may block our scraper. If you encounter issues, try a different website or check back later.")
+                st.info(
+                    "Note: Some websites may block our scraper. If you encounter issues, try a different website or check back later.")
 
                 def update_progress(progress, status):
                     progress_bar.progress(progress)
@@ -208,46 +241,69 @@ def main():
 
             if st.button('🔮 Analyze', key='parse_button'):
                 if st.session_state.parser_input:
-                    with st.expander("🔬 Analysis Dashboard", expanded=True):
-                        st.markdown("<h3 class='pulse'>🧙‍♂️ The AI is weaving its magic...</h3>",
-                                    unsafe_allow_html=True)
-                        if lottie_analyzing:
-                            st_lottie(lottie_analyzing, speed=1, height=200, key="analyzing")
-                        progress_bar = st.progress(0)
-                        status_text = st.empty()
+                    try:
+                        st.session_state.parsed_result = groq_parser(
+                            st.session_state.data_bits,
+                            st.session_state.parser_input,
+                            lambda p, s: None  # Placeholder for progress update
+                        )
 
-                        def update_progress(progress, status):
-                            progress_bar.progress(progress)
-                            status_text.text(status)
+                        if st.session_state.parsed_result:
+                            st.success("✨ Analysis complete! Behold the insights!")
+                            st.subheader("🎨 Parsed Insights")
+                            st.write(st.session_state.parsed_result)
+                        else:
+                            st.warning("The analysis did not produce any results. The parsed content might be empty.")
+                    except Exception as e:
+                        st.error(f"An error occurred during analysis: {str(e)}")
+                        logger.exception("Error during analysis")
 
-                        try:
-                            st.session_state.parsed_result = groq_parser(
-                                st.session_state.data_bits,
-                                st.session_state.parser_input,
-                                update_progress
-                            )
+            # Display download options if parsed result exists
+            if st.session_state.get('parsed_result'):
+                st.subheader("📥 Download Options")
 
-                            if st.session_state.parsed_result:
-                                st.success("✨ Analysis complete! Behold the insights!")
-                                st.subheader("🎨 Parsed Insights")
-                                st.write(st.session_state.parsed_result)
-                            else:
-                                st.warning(
-                                    "The analysis did not produce any results. The parsed content might be empty.")
+                # File format selector using radio buttons
+                st.session_state.file_format = st.radio(
+                    "Select file format for download",
+                    options=['txt', 'json'],
+                    format_func=lambda x: f".{x} file",
+                    horizontal=True
+                )
 
-                            # Word Cloud
-                            st.subheader("☁️ Word Cloud")
-                            wordcloud = generate_wordcloud(st.session_state.cleaned_content)
-                            if wordcloud:
-                                plt.figure(figsize=(10, 5))
-                                plt.imshow(wordcloud, interpolation='bilinear')
-                                plt.axis('off')
-                                st.pyplot(plt)
-                            else:
-                                st.warning(
-                                    "🌪️ Oops! The word cloud generator hit a snag. But don't worry, the show must go on!")
-                        except Exception as e:
-                            st.error(f"An error occurred during analysis: {str(e)}")
+                # Format the parsed result for download
+                formatted_result = format_parsed_result(st.session_state.parsed_result, st.session_state.file_format)
+
+                # Check file size
+                file_size = len(formatted_result.encode('utf-8'))
+                max_size = 200 * 1024 * 1024  # 200 MB limit
+
+                if file_size > max_size:
+                    st.warning(
+                        "⚠️ The parsed result is too large to download directly. Consider breaking it into smaller parts.")
+                else:
+                    # Preview of downloadable content
+                    st.subheader("🔍 Preview of Downloadable Content")
+                    st.code(get_preview(formatted_result), language=st.session_state.file_format)
+
+                    # Add download button for parsed results
+                    st.download_button(
+                        label=f"📥 Download Parsed Results (.{st.session_state.file_format})",
+                        data=formatted_result,
+                        file_name=f"parsed_results.{st.session_state.file_format}",
+                        mime=f"text/{st.session_state.file_format}"
+                    )
+
+            # Word Cloud
+            if st.session_state.get('cleaned_content'):
+                st.subheader("☁️ Word Cloud")
+                wordcloud = generate_wordcloud(st.session_state.cleaned_content)
+                if wordcloud:
+                    plt.figure(figsize=(10, 5))
+                    plt.imshow(wordcloud, interpolation='bilinear')
+                    plt.axis('off')
+                    st.pyplot(plt)
+                else:
+                    st.warning("🌪️ Oops! The word cloud generator hit a snag. But don't worry, the show must go on!")
 
     elif page == "About":
         st.markdown("<h1 class='pulse'>About</h1>", unsafe_allow_html=True)
@@ -268,9 +324,7 @@ def main():
         with col1:
             st.write("")
             st.image(
-                "https://files.vecteezy.com/system/resource/files/15328491/vecteezy_artificial-consciousness-vector-icon-design_15328491_193.svg?response-content-disposition=attachment%3Bfilename%3Dvecteezy_artificial-consciousness-vector-icon-design_15328491.svg&Expires=1725258081&Signature=PR96c9BgsgV9ZQLjaAn4S95V-kY9UmWlf5dfmKP9VkFajQOvYBwMNCKLfYjpJwH7seFiklAH20hZw6U-UrjrGoxMiAzSsk7x2TELwlHy3HK2PjKWfdG0ukOkJUaL-rrtzcCJ7o4QBmANjGZCkXhIPD5QvMe46lu~Qgyz6yBhcvQ15Jn15og9SR51tPNY3~ZIKlWAri-TIPT-RErMk4HHY7LpMpbiFj0H9HbQC0CCF8iTiQPpZ77e3C-"
-                "2R8mpSf2Jsz34E13HybcReU1WWYfGxQO1Wp5I5MiX0Z0eJQl-"
-                "3Ysms8TcxIV7RUcey6f7gJIJgKA8L-z7qv2kZ2YTVXOVhQ__&Key-Pair-Id=K3714PYOSHV3HB", width=146)
+                "https://img.icons8.com/?size=100&id=GBu1KXnCZZ8j&format=png&color=000000", width=146)
             st.write("Groq - AI Expert")
         with col2:
             st.image("https://api.dicebear.com/9.x/personas/svg?seed=Maggie", width=150)
@@ -302,3 +356,12 @@ def main():
 
 if __name__ == "__main__":
     main()
+    st.write("")
+    st.write("")
+    st.write("")
+    st.write("")
+    st.write("")
+    st.write("")
+    st.write("")
+    interactive_background()
+

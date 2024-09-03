@@ -1,4 +1,6 @@
 import logging
+
+import streamlit
 from selenium.webdriver import Remote, ChromeOptions
 from selenium.webdriver.chromium.remote_connection import ChromiumRemoteConnection
 from selenium.webdriver.support.ui import WebDriverWait
@@ -33,7 +35,6 @@ user_agents = [
 ]
 
 languages = ['en-US,en;q=0.9', 'en-GB,en;q=0.8', 'es-ES,es;q=0.9']
-
 
 @retry(stop_max_attempt_number=3, wait_fixed=2000)
 def scrape_website(site: str) -> str:
@@ -133,31 +134,6 @@ def batch_max_url(content: str, max_length: int = 6000) -> List[str]:
     return [content[i:i + max_length] for i in range(0, len(content), max_length)]
 
 
-def scrape_with_progress(url: str, progress_callback: Callable[[int, str], None]) -> Tuple[str, List[str]]:
-    progress_callback(0, "Initializing scraper...")
-    time.sleep(1)  # Simulate initialization time
-
-    progress_callback(20, "Fetching webpage...")
-    html_content = scrape_website(url)
-    if html_content is None:
-        progress_callback(100, "Scraping failed")
-        raise Exception("Failed to fetch webpage content")
-
-    progress_callback(40, "Extracting content...")
-    extracted_content = extract_url(html_content)
-
-    progress_callback(60, "Cleaning data...")
-    cleaned_content = clean_url(extracted_content)
-
-    progress_callback(80, "Preparing for analysis...")
-    data_bits = batch_max_url(cleaned_content)
-
-    progress_callback(100, "Scraping complete!")
-
-    return cleaned_content, data_bits
-
-
-# Example usage
 if __name__ == "__main__":
     def print_progress(progress: int, message: str):
         print(f"Progress: {progress}% - {message}")

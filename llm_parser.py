@@ -1,8 +1,9 @@
 import asyncio
 import json
+
+import streamlit
 from groq import AsyncGroq
 import os
-
 
 api_key = os.environ.get("GROQ_API_KEY")
 if api_key is None:
@@ -18,6 +19,7 @@ def parse_response(response):
         return {"raw_response": response}
 
 
+@streamlit.cache_resource
 class GroqParser:
     def __init__(self):
         self.client = AsyncGroq(api_key=api_key)
@@ -67,6 +69,28 @@ async def async_groq_parser(data_bits, instruction, progress_callback=None):
         progress_callback(100, "Analysis complete!")
 
     return results
+
+
+def format_parsed_result(result, format_type='txt'):
+    if isinstance(result, list):
+        if format_type == 'json':
+            return json.dumps(result, indent=2)
+        else:
+            return "\n".join(str(item) for item in result)
+    elif isinstance(result, dict):
+        if format_type == 'json':
+            return json.dumps(result, indent=2)
+        else:
+            return "\n".join(f"{k}: {v}" for k, v in result.items())
+    else:
+        return str(result)
+
+def get_preview(content, max_lines=5):
+    lines = content.split('\n')
+    preview = '\n'.join(lines[:max_lines])
+    if len(lines) > max_lines:
+        preview += '\n...'
+    return preview
 
 
 def groq_parser(data_bits, instruction, progress_callback=None):
