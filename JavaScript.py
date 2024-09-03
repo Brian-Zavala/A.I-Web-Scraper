@@ -1,5 +1,4 @@
 import streamlit.components.v1 as components
-import random
 
 
 def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 255, 255, 0.8)',
@@ -84,7 +83,7 @@ def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 
             }}
 
             if (this.pulsing) {{
-                this.lifetime -= 2;
+                this.lifetime -= isMobile ? this.initialLifetime : 2;
             }} else {{
                 this.lifetime -= 1;
             }}
@@ -128,7 +127,7 @@ def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 
             this.x += this.speedX;
             this.y += this.speedY;
             this.size *= 0.95;
-            this.lifetime -= 1;
+            this.lifetime -= isMobile ? this.lifetime : 1;
 
             this.trail.push({{ x: this.x, y: this.y }});
             if (this.trail.length > this.trailLength) {{
@@ -137,7 +136,7 @@ def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 
         }}
 
         draw() {{
-            const opacity = this.lifetime / 10;
+            const opacity = this.lifetime / (isMobile ? 1 : 10);
             ctx.fillStyle = `${{'{spark_color}'.slice(0, -4)}}${{opacity}})`;
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
@@ -191,11 +190,11 @@ def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 
         }}
 
         update() {{
-            this.lifetime -= 1;
+            this.lifetime -= isMobile ? this.lifetime : 1;
         }}
 
         draw() {{
-            const opacity = this.lifetime / 5;
+            const opacity = this.lifetime / (isMobile ? 1 : 5);
             for (let i = 0; i < this.branches.length; i++) {{
                 const branch = this.branches[i];
                 ctx.strokeStyle = branch.color.replace('0.5', opacity);
@@ -254,7 +253,17 @@ def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 
         mouse.y = event.clientY;
     }});
 
+    document.addEventListener('touchmove', (event) => {{
+        mouse.x = event.touches[0].clientX;
+        mouse.y = event.touches[0].clientY;
+    }});
+
     document.addEventListener('mouseleave', () => {{
+        mouse.x = null;
+        mouse.y = null;
+    }});
+
+    document.addEventListener('touchend', () => {{
         mouse.x = null;
         mouse.y = null;
     }});
