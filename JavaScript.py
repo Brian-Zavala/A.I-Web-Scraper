@@ -41,8 +41,9 @@ def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 
     let isSmallScreen = window.innerWidth < 768;
     let isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     let lastInteractionTime = 0;
-    const mobileEffectDuration = 800; // 800ms total duration for mobile effects
-    const mobileDecayDuration = 200; // 200ms decay duration for mobile effects
+    const mobileVisibleDuration = 500; // 500ms visible duration
+    const mobileFadeDuration = 300; // 300ms fade duration
+    const mobileEffectDuration = mobileVisibleDuration + mobileFadeDuration;
 
     function resizeCanvas() {{
         width = window.innerWidth;
@@ -58,10 +59,10 @@ def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 
     function getOpacity(creationTime, currentTime) {{
         if (!isMobileDevice) return 1;
         const timeSinceCreation = currentTime - creationTime;
-        if (timeSinceCreation <= mobileEffectDuration - mobileDecayDuration) {{
+        if (timeSinceCreation <= mobileVisibleDuration) {{
             return 1;
         }} else if (timeSinceCreation <= mobileEffectDuration) {{
-            return 1 - (timeSinceCreation - (mobileEffectDuration - mobileDecayDuration)) / mobileDecayDuration;
+            return 1 - (timeSinceCreation - mobileVisibleDuration) / mobileFadeDuration;
         }} else {{
             return 0;
         }}
@@ -100,10 +101,6 @@ def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 
                     sparks.push(new Spark(this.x, this.y, currentTime));
                     lightningBolts.push(new LightningBolt(this.x, this.y, currentTime));
                 }}
-            }}
-
-            if (isMobileDevice && this.pulsing && currentTime - this.pulseCreationTime > mobileEffectDuration) {{
-                this.pulsing = false;
             }}
 
             this.lifetime -= 1;
@@ -276,39 +273,44 @@ def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 
     }}
 
     function handleInteraction(event) {{
-        lastInteractionTime = performance.now();
+        const currentTime = performance.now();
+        lastInteractionTime = currentTime;
         const rect = canvas.getBoundingClientRect();
         const x = (event.clientX || event.touches[0].clientX) - rect.left;
         const y = (event.clientY || event.touches[0].clientY) - rect.top;
         mouse.x = x;
         mouse.y = y;
 
-        // Reset all signals' pulsing state on each interaction
         if (isMobileDevice) {{
             signals.forEach(signal => {{
-                signal.pulsing = false;
+                const dx = x - signal.x;
+                const dy = y - signal.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance < mouse.radius) {{
+                    signal.pulsing = true;
+                    signal.pulseCreationTime = currentTime;
+                }}
             }});
         }}
     }}
 
+    let touchTimeout;
+    function handleTouchStart(event) {{
+        handleInteraction(event);
+        if (touchTimeout) clearTimeout(touchTimeout);
+        touchTimeout = setTimeout(() => {{
+            mouse.x = null;
+            mouse.y = null;
+        }}, mobileEffectDuration);
+    }}
+
     document.addEventListener('mousemove', handleInteraction);
     document.addEventListener('touchmove', handleInteraction);
-    document.addEventListener('touchstart', handleInteraction);
+    document.addEventListener('touchstart', handleTouchStart);
 
     document.addEventListener('mouseleave', () => {{
         mouse.x = null;
         mouse.y = null;
-    }});
-
-    document.addEventListener('touchend', () => {{
-        mouse.x = null;
-        mouse.y = null;
-        // Reset all signals' pulsing state on touch end
-        if (isMobileDevice) {{
-            signals.forEach(signal => {{
-                signal.pulsing = false;
-            }});
-        }}
     }});
 
     init();
