@@ -164,7 +164,7 @@ def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 
             this.x = x;
             this.y = y;
             this.branches = [];
-            this.lifetime = isSmallScreen ? Math.random() * 10 + 5 : Math.random() * 20 + 10;
+            this.lifetime = isSmallScreen ? Math.random() * 5 + 2 : Math.random() * 20 + 10;
             this.createBranches();
         }}
 
@@ -196,7 +196,7 @@ def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 
         }}
 
         draw() {{
-            const opacity = isSmallScreen ? this.lifetime / 10 : this.lifetime / 20;
+            const opacity = isSmallScreen ? this.lifetime / 5 : this.lifetime / 20;
             for (let i = 0; i < this.branches.length; i++) {{
                 const branch = this.branches[i];
                 ctx.strokeStyle = branch.color.replace('0.5', opacity);
