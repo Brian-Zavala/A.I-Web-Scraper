@@ -1,6 +1,6 @@
 import streamlit as st
 from streamlit_lottie import st_lottie
-from JavaScript import interactive_background
+from JavaScript import brain_electrical_signals_background
 import requests
 from scraper import scrape_with_progress
 from llm_parser import groq_parser, get_preview, format_parsed_result
@@ -14,29 +14,7 @@ import base64
 import logging
 
 st.set_page_config(layout="wide", page_title="AI Web Scraper & Analyzer", page_icon="🌐", initial_sidebar_state="auto")
-# Add custom CSS
-st.markdown("""
-     <style>
-     .stApp {
-         background: transparent;
-     }
-     [data-testid="stHeader"] {
-         background-color: rgba(0,0,0,0.5);
-     }
-     [data-testid="stToolbar"] {
-         background-color: rgba(0,0,0,0.5);
-     }
-     .stApp > header {
-         background-color: transparent;
-     }
-     div[data-testid="stStatusWidget"] {
-         z-index: 100;
-     }
-     </style>
- """, unsafe_allow_html=True)
 
-# Add interactive background
-interactive_background()
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -123,7 +101,6 @@ if background_image:
 
 
 # Function to generate word cloud
-@st.cache_data
 def generate_wordcloud(text):
     try:
         stop_words = set(stopwords.words('english'))
@@ -136,6 +113,24 @@ def generate_wordcloud(text):
     except Exception as e:
         st.error(f"An error occurred while generating the word cloud: {str(e)}")
         return None
+
+# Add custom CSS
+st.markdown("""
+     <style>
+
+     [data-testid="stHeader"] {
+         background-color: rgba(0,0,0,0.5);
+     }
+
+     .stApp > header {
+         background-color: transparent;
+     }
+
+     </style>
+ """, unsafe_allow_html=True)
+
+# Add interactive background
+brain_electrical_signals_background()
 
 
 # Custom CSS for animations and styling
@@ -363,5 +358,5 @@ if __name__ == "__main__":
     st.write("")
     st.write("")
     st.write("")
-    interactive_background()
+    brain_electrical_signals_background()
 

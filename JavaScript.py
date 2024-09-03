@@ -1,7 +1,9 @@
 import streamlit.components.v1 as components
+import random
 
 
-def interactive_background(num_nodes=20, node_color='rgb(0, 0, 0)', connection_color='rgb(255, 255, 255)'):
+def brain_electrical_signals_background(num_signals=50, signal_color='rgba(255, 255, 255, 0.8)',
+                                        pulse_color='rgba(255, 255, 0, 0.8)', spark_color='rgba(255, 255, 255, 0.8)'):
     components.html(f"""
     <style>
     body {{
@@ -10,7 +12,7 @@ def interactive_background(num_nodes=20, node_color='rgb(0, 0, 0)', connection_c
         overflow: hidden;
     }}
 
-    #ai-neural-network {{
+    #brain-electrical-signals {{
         position: fixed;
         top: 0;
         left: 0;
@@ -25,14 +27,15 @@ def interactive_background(num_nodes=20, node_color='rgb(0, 0, 0)', connection_c
         z-index: 1;
     }}
     </style>
-    <canvas id="ai-neural-network"></canvas>
+    <canvas id="brain-electrical-signals"></canvas>
     <script>
-    const canvas = document.getElementById('ai-neural-network');
+    const canvas = document.getElementById('brain-electrical-signals');
     const ctx = canvas.getContext('2d');
     let width, height;
-    let nodes = [];
-    const numNodes = {num_nodes};
-    let mouse = {{ x: null, y: null, radius: 150 }};
+    let signals = [];
+    let sparks = [];
+    const numSignals = {num_signals};
+    let mouse = {{ x: null, y: null, radius: 100 }};
 
     function resizeCanvas() {{
         width = window.innerWidth;
@@ -44,91 +47,122 @@ def interactive_background(num_nodes=20, node_color='rgb(0, 0, 0)', connection_c
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
-    class Node {{
-        constructor() {{
-            this.x = Math.random() * width;
-            this.y = Math.random() * height;
-            this.radius = Math.random() * 4 + 2;
-            this.speedX = Math.random() * 1 - 0.5;
-            this.speedY = Math.random() * 1 - 0.5;
-            this.originalX = this.x;
-            this.originalY = this.y;
+    class Signal {{
+        constructor(x, y) {{
+            this.x = x;
+            this.y = y;
+            this.speedX = Math.random() * 3 - 1.5;
+            this.speedY = Math.random() * 3 - 1.5;
+            this.lifetime = Math.random() * 200 + 50;
+            this.initialLifetime = this.lifetime;
+            this.pulsing = false;
         }}
 
         update() {{
+            this.x += this.speedX;
+            this.y += this.speedY;
+
+            if (this.x > width || this.x < 0) {{
+                this.speedX *= -1;
+            }}
+            if (this.y > height || this.y < 0) {{
+                this.speedY *= -1;
+            }}
+
             if (mouse.x && mouse.y) {{
                 const dx = mouse.x - this.x;
                 const dy = mouse.y - this.y;
                 const distance = Math.sqrt(dx * dx + dy * dy);
                 if (distance < mouse.radius) {{
-                    const angle = Math.atan2(dy, dx);
-                    this.x -= Math.cos(angle) * 3;
-                    this.y -= Math.sin(angle) * 3;
-                }} else {{
-                    this.x += (this.originalX - this.x) * 0.05;
-                    this.y += (this.originalY - this.y) * 0.05;
+                    this.pulsing = true;
+                    sparks.push(new Spark(this.x, this.y));
                 }}
-            }} else {{
-                this.x += this.speedX;
-                this.y += this.speedY;
             }}
 
-            if (this.x > width + this.radius) {{
-                this.originalX = -this.radius;
-                this.x = -this.radius;
-            }} else if (this.x < -this.radius) {{
-                this.originalX = width + this.radius;
-                this.x = width + this.radius;
+            if (this.pulsing) {{
+                this.lifetime -= 2;
+            }} else {{
+                this.lifetime -= 1;
             }}
-            if (this.y > height + this.radius) {{
-                this.originalY = -this.radius;
-                this.y = -this.radius;
-            }} else if (this.y < -this.radius) {{
-                this.originalY = height + this.radius;
-                this.y = height + this.radius;
+
+            if (this.lifetime <= 0) {{
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.lifetime = this.initialLifetime;
+                this.pulsing = false;
             }}
         }}
 
         draw() {{
-            ctx.fillStyle = '{node_color}';
+            const opacity = this.lifetime / this.initialLifetime;
+            if (this.pulsing) {{
+                ctx.strokeStyle = '{pulse_color}';
+            }} else {{
+                ctx.strokeStyle = `${{'{signal_color}'.slice(0, -4)}}${{opacity}})`;
+            }}
+            ctx.lineWidth = 2;
             ctx.beginPath();
-            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            ctx.moveTo(this.x, this.y);
+            ctx.lineTo(this.x + this.speedX * 10, this.y + this.speedY * 10);
+            ctx.stroke();
+        }}
+    }}
+
+    class Spark {{
+        constructor(x, y) {{
+            this.x = x;
+            this.y = y;
+            this.speedX = Math.random() * 4 - 2;
+            this.speedY = Math.random() * 4 - 2;
+            this.size = Math.random() * 3 + 1;
+            this.lifetime = Math.random() * 20 + 10;
+        }}
+
+        update() {{
+            this.x += this.speedX;
+            this.y += this.speedY;
+            this.size *= 0.95;
+            this.lifetime -= 1;
+        }}
+
+        draw() {{
+            const opacity = this.lifetime / 20;
+            ctx.fillStyle = `${{'{spark_color}'.slice(0, -4)}}${{opacity}})`;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
             ctx.fill();
+        }}
+
+        isAlive() {{
+            return this.lifetime > 0;
         }}
     }}
 
     function init() {{
-        nodes = [];
-        for (let i = 0; i < numNodes; i++) {{
-            nodes.push(new Node());
+        signals = [];
+        for (let i = 0; i < numSignals; i++) {{
+            const x = Math.random() * width;
+            const y = Math.random() * height;
+            signals.push(new Signal(x, y));
         }}
     }}
 
     function animate() {{
         ctx.clearRect(0, 0, width, height);
-        for (let i = 0; i < nodes.length; i++) {{
-            nodes[i].update();
-            nodes[i].draw();
-            connectNodes(nodes[i], nodes);
+        for (let i = 0; i < signals.length; i++) {{
+            signals[i].update();
+            signals[i].draw();
         }}
-        requestAnimationFrame(animate);
-    }}
 
-    function connectNodes(node, nodes) {{
-        for (let j = 0; j < nodes.length; j++) {{
-            const dx = node.x - nodes[j].x;
-            const dy = node.y - nodes[j].y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-
-            if (distance < 150) {{
-                ctx.strokeStyle = '{connection_color}';
-                ctx.lineWidth = 0.2;
-                ctx.beginPath();
-                ctx.moveTo(node.x, node.y);
-                ctx.lineTo(nodes[j].x, nodes[j].y);
-                ctx.stroke();
+        for (let i = sparks.length - 1; i >= 0; i--) {{
+            sparks[i].update();
+            sparks[i].draw();
+            if (!sparks[i].isAlive()) {{
+                sparks.splice(i, 1);
             }}
         }}
+
+        requestAnimationFrame(animate);
     }}
 
     document.addEventListener('mousemove', (event) => {{
