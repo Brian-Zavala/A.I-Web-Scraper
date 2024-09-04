@@ -356,10 +356,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    st.write("")
-    st.write("")
-    st.write("")
-    st.write("")
-    st.write("")
-    st.write("")
-    st.write("")
