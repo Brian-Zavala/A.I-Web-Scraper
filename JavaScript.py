@@ -1,10 +1,7 @@
 import streamlit.components.v1 as components
-import random
 
 
-def brain_electrical_signals_background(num_neurons=150, neuron_color='rgba(255, 255, 255, 0.5)',
-                                        signal_color='rgb(255, 255, 255)',
-                                        connection_color='rgba(100, 100, 100, 0.3)'):
+def brain_electrical_signals_background(num_neurons=32):
     components.html(f"""
     <style>
     body {{
@@ -35,14 +32,14 @@ def brain_electrical_signals_background(num_neurons=150, neuron_color='rgba(255,
     let neurons = [];
     const numNeurons = {num_neurons};
     const neuronRadius = 2;
-    const connectionDistance = 100;
-    const signalSpeed = 0.006;
+    const connectionDistance = 120;
+    const signalSpeed = 0.008;
     let signals = [];
     let isInteracting = false;
     let interactionTimeout;
 
-    const fluidForce = 0.00005;
-    const maxSpeed = 0.3;
+    const fluidForce = 0.00007;
+    const maxSpeed = 0.4;
 
     function resizeCanvas() {{
         width = window.innerWidth;
@@ -55,6 +52,13 @@ def brain_electrical_signals_background(num_neurons=150, neuron_color='rgba(255,
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
+    function getRandomColor() {{
+        const r = Math.floor(Math.random() * 256);
+        const g = Math.floor(Math.random() * 256);
+        const b = Math.floor(Math.random() * 256);
+        return `rgb(${{r}},${{g}},${{b}})`;
+    }}
+
     function initializeNeurons() {{
         neurons = [];
         for (let i = 0; i < numNeurons; i++) {{
@@ -63,6 +67,7 @@ def brain_electrical_signals_background(num_neurons=150, neuron_color='rgba(255,
                 y: Math.random() * height,
                 vx: (Math.random() - 0.5) * maxSpeed,
                 vy: (Math.random() - 0.5) * maxSpeed,
+                color: getRandomColor(),
                 activated: false,
                 activationTime: 0
             }});
@@ -91,17 +96,17 @@ def brain_electrical_signals_background(num_neurons=150, neuron_color='rgba(255,
     }}
 
     function drawNeurons() {{
-        ctx.fillStyle = '{neuron_color}';
         neurons.forEach(neuron => {{
+            ctx.fillStyle = neuron.color;
             ctx.beginPath();
             ctx.arc(neuron.x, neuron.y, neuronRadius, 0, Math.PI * 2);
             ctx.fill();
         }});
     }}
 
-    function createZigZagPath(x1, y1, x2, y2, segments = 10) {{
+    function createZigZagPath(x1, y1, x2, y2, segments = 12) {{
         const path = [];
-        const zigzagScale = 0.1;
+        const zigzagScale = 0.15;
 
         for (let i = 0; i <= segments; i++) {{
             const t = i / segments;
@@ -111,7 +116,7 @@ def brain_electrical_signals_background(num_neurons=150, neuron_color='rgba(255,
             const perpX = -(y2 - y1) * zigzagScale;
             const perpY = (x2 - x1) * zigzagScale;
 
-            const zigzag = Math.sin(t * Math.PI * 4) * (1 - t);  // Diminishing zigzag
+            const zigzag = Math.sin(t * Math.PI * 6) * (1 - t);
 
             path.push({{ 
                 x: x + perpX * zigzag, 
@@ -125,7 +130,15 @@ def brain_electrical_signals_background(num_neurons=150, neuron_color='rgba(255,
         const progress = Math.min(1, (currentTime - signal.startTime) * signalSpeed);
         const numPoints = Math.floor(progress * signal.path.length);
 
-        ctx.strokeStyle = '{signal_color}';
+        const gradient = ctx.createLinearGradient(
+            signal.path[0].x, signal.path[0].y,
+            signal.path[signal.path.length - 1].x, signal.path[signal.path.length - 1].y
+        );
+        gradient.addColorStop(0, 'rgba(0, 255, 255, 0.8)');
+        gradient.addColorStop(0.5, 'rgba(255, 0, 255, 0.8)');
+        gradient.addColorStop(1, 'rgba(255, 255, 0, 0.8)');
+
+        ctx.strokeStyle = gradient;
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(signal.path[0].x, signal.path[0].y);
@@ -135,6 +148,12 @@ def brain_electrical_signals_background(num_neurons=150, neuron_color='rgba(255,
         }}
 
         ctx.stroke();
+
+        // Add glow effect
+        ctx.shadowBlur = 5;
+        ctx.shadowColor = 'rgba(255, 255, 255, 0.5)';
+        ctx.stroke();
+        ctx.shadowBlur = 0;
 
         return progress < 1;
     }}
@@ -149,13 +168,13 @@ def brain_electrical_signals_background(num_neurons=150, neuron_color='rgba(255,
         if (isInteracting) {{
             const nearbyNeurons = getNearbyNeurons(lastInteractionPos.x, lastInteractionPos.y, connectionDistance);
             if (nearbyNeurons.length > 1) {{
-                const numSourceNeurons = Math.min(3, nearbyNeurons.length);
+                const numSourceNeurons = Math.min(4, nearbyNeurons.length);
                 for (let s = 0; s < numSourceNeurons; s++) {{
                     const sourceNeuron = nearbyNeurons[s];
                     for (let i = 0; i < nearbyNeurons.length; i++) {{
                         if (i !== s) {{
                             const targetNeuron = nearbyNeurons[i];
-                            if (Math.random() < 0.05) {{  // Increased probability for more signals
+                            if (Math.random() < 0.1) {{  // Increased probability for more signals
                                 signals.push({{
                                     path: createZigZagPath(sourceNeuron.x, sourceNeuron.y, targetNeuron.x, targetNeuron.y),
                                     startTime: currentTime
@@ -190,7 +209,7 @@ def brain_electrical_signals_background(num_neurons=150, neuron_color='rgba(255,
         interactionTimeout = setTimeout(() => {{
             isInteracting = false;
             lastInteractionPos = {{ x: null, y: null }};
-        }}, 100);  // Small delay to prevent immediate stop on quick movements
+        }}, 100);
     }}
 
     function onInteraction(event) {{

@@ -1,6 +1,4 @@
 import logging
-
-import streamlit
 from selenium.webdriver import Remote, ChromeOptions
 from selenium.webdriver.chromium.remote_connection import ChromiumRemoteConnection
 from selenium.webdriver.support.ui import WebDriverWait
