@@ -214,7 +214,7 @@ def create_visualization(data: Union[list, dict], viz_type: str = None):
             fig.update_traces(marker=dict(size=10))
         elif len(numeric_columns) == 1:
             fig = px.line(df, y=numeric_columns[0], title=f"Trend of {numeric_columns[0]}")
-        elif len(categorical_columns) >= 4:
+        elif len(categorical_columns) >= 1:
             column_to_plot = categorical_columns[0]
             fig = px.bar(df[column_to_plot].value_counts(), title=f"Distribution of {column_to_plot}")
             fig.update_layout(xaxis_title=column_to_plot, yaxis_title="Count")
