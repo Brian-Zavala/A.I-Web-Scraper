@@ -205,14 +205,6 @@ flake8
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 📚 Documentation
-
-Full documentation is available in the [docs](docs/) directory:
-- [API Reference](docs/api.md)
-- [Configuration Guide](docs/configuration.md)
-- [Advanced Usage](docs/advanced.md)
-- [Contributing Guide](docs/contributing.md)
-
 ## 🙏 Acknowledgments
 
 - Groq AI for providing the analysis capabilities
