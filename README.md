@@ -53,10 +53,9 @@ An intelligent web scraping and content analysis tool powered by Groq AI, design
 ## 📦 Installation
 
 1. **Clone the Repository**
-```bash
-git clone https://github.com/Brian-Zavala/A.I-Web-Scraper.git
-cd A.I-Web-Scraper
-```
+   ```bash
+   git clone https://github.com/Brian-Zavala/A.I-Web-Scraper.git
+   cd A.I-Web-Scraper
 
 2. **Set Up Virtual Environment**
 ```bash
